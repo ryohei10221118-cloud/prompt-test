@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 <title>角色分類管理工具</title>
 <link rel="icon" type="image/png" href="/favicon.png">
- 
+
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -393,7 +393,7 @@
   }
   .add-btn {
     background: #17a2b8 !important;
-    font-size: 0.85em;
+    font-size: 1em;
     padding: 6px 12px;
   }
   .delete-btn {
@@ -401,7 +401,7 @@
   }
   .delete-section-btn {
     background: #dc3545 !important;
-    font-size: 0.85em;
+    font-size: 1em;
     padding: 6px 12px;
   }
   .cancel-btn {
@@ -541,6 +541,9 @@
   }
   .nav-btn, .add-category-btn-inline {
     padding: 10px 16px;
+    font-size: 0.9em;
+  }
+  .add-btn, .delete-section-btn {
     font-size: 0.9em;
   }
   .section-title {
@@ -712,7 +715,7 @@
         <input type="text" id="newItemName" class="edit-input" placeholder="例如: 樊季衡、戚燁..." />
       </div>
       <div class="category-input-group">
-        <label class="category-input-label">Prompt 內容</label>
+        <label class="category-input-label optional">Prompt 內容（選填）</label>
         <textarea id="newItemPrompt" class="edit-textarea" placeholder="請輸入角色的 prompt 描述..."></textarea>
       </div>
       <div class="category-input-group">
@@ -722,6 +725,33 @@
       <div class="modal-actions">
         <button class="save-btn" onclick="confirmAddItem()">✓ 確定</button>
         <button class="cancel-btn" onclick="closeAddItemModal()">✕ 取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="editItemModal" class="modal" onclick="closeEditItemModalOnBackdrop(event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">✏️ 編輯角色</h2>
+      <button class="close-btn" onclick="closeEditItemModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="category-input-group">
+        <label class="category-input-label">角色名稱</label>
+        <input type="text" id="editItemName" class="edit-input" placeholder="例如: 樊季衡、戚燁..." />
+      </div>
+      <div class="category-input-group">
+        <label class="category-input-label optional">Prompt 內容（選填）</label>
+        <textarea id="editItemPrompt" class="edit-textarea" placeholder="請輸入角色的 prompt 描述..."></textarea>
+      </div>
+      <div class="category-input-group">
+        <label class="category-input-label optional">PixAI Prompt（選填）</label>
+        <textarea id="editItemPixaiPrompt" class="edit-textarea" placeholder="PixAI 專用版本..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="save-btn" onclick="confirmEditItem()">✓ 儲存</button>
+        <button class="cancel-btn" onclick="closeEditItemModal()">✕ 取消</button>
       </div>
     </div>
   </div>
@@ -1118,14 +1148,24 @@
     const modal = document.getElementById('itemModal');
     document.getElementById('modalTitle').textContent = item.name;
 
-    let bodyHtml = `
-      <div class="modal-prompt">${item.prompt}</div>
-      <div class="modal-actions">
-        <button class="copy-modal-btn" onclick="copyFromModal('${sectionName}', ${itemIndex}, 'prompt')">📋 複製</button>
-      </div>
-    `;
+    let bodyHtml = '';
 
-    if (item.pixaiPrompt) {
+    // 判斷顯示邏輯
+    const hasPrompt = item.prompt && item.prompt.trim();
+    const hasPixaiPrompt = item.pixaiPrompt && item.pixaiPrompt.trim();
+
+    if (hasPrompt) {
+      // 有普通 prompt，顯示普通版本
+      bodyHtml += `
+        <div class="modal-prompt">${item.prompt}</div>
+        <div class="modal-actions">
+          <button class="copy-modal-btn" onclick="copyFromModal('${sectionName}', ${itemIndex}, 'prompt')">📋 複製</button>
+        </div>
+      `;
+    }
+
+    if (hasPixaiPrompt) {
+      // 有 PixAI prompt，顯示 PixAI 版本
       bodyHtml += `
         <div class="pixai-section">
           <span class="pixai-badge">PixAI 版本</span>
@@ -1137,11 +1177,12 @@
       `;
     }
 
-    // 如果已登入，顯示刪除按鈕
+    // 如果已登入，顯示編輯和刪除按鈕
     if (currentUser) {
       bodyHtml += `
-        <div class="modal-actions" style="margin-top: 15px;">
-          <button class="delete-btn" onclick="deleteItemFromModal('${sectionName}', ${itemIndex})">🗑️ 刪除此角色</button>
+        <div class="modal-actions" style="margin-top: 15px; gap: 10px;">
+          <button class="save-btn" onclick="openEditItemModal('${sectionName}', ${itemIndex})">✏️ 編輯</button>
+          <button class="delete-btn" onclick="deleteItemFromModal('${sectionName}', ${itemIndex})">🗑️ 刪除</button>
         </div>
       `;
     }
@@ -1297,6 +1338,11 @@
       return;
     }
 
+    if (!prompt && !pixaiPrompt) {
+      alert('請至少填寫一個 Prompt（普通版本或 PixAI 版本）');
+      return;
+    }
+
     const newItem = {
       name: name,
       prompt: prompt || ''
@@ -1312,6 +1358,82 @@
       closeAddItemModal();
       renderUI();
       alert('新增成功！');
+    }
+  };
+
+  // 編輯項目
+  let currentSectionForEditItem = '';
+  let currentIndexForEditItem = -1;
+
+  window.openEditItemModal = function(sectionName, itemIndex) {
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
+    currentSectionForEditItem = sectionName;
+    currentIndexForEditItem = itemIndex;
+
+    const item = allData[sectionName].items[itemIndex];
+    document.getElementById('editItemName').value = item.name || '';
+    document.getElementById('editItemPrompt').value = item.prompt || '';
+    document.getElementById('editItemPixaiPrompt').value = item.pixaiPrompt || '';
+
+    // 先關閉詳情 Modal，再開啟編輯 Modal
+    closeModal();
+    document.getElementById('editItemModal').classList.add('show');
+
+    // 自動聚焦到角色名稱輸入框
+    setTimeout(() => {
+      document.getElementById('editItemName').focus();
+    }, 300);
+  };
+
+  // 關閉編輯項目 Modal
+  window.closeEditItemModal = function() {
+    document.getElementById('editItemModal').classList.remove('show');
+    currentSectionForEditItem = '';
+    currentIndexForEditItem = -1;
+  };
+
+  // 點擊背景關閉
+  window.closeEditItemModalOnBackdrop = function(event) {
+    if (event.target === document.getElementById('editItemModal')) {
+      closeEditItemModal();
+    }
+  };
+
+  // 確認編輯項目
+  window.confirmEditItem = async function() {
+    const name = document.getElementById('editItemName').value.trim();
+    const prompt = document.getElementById('editItemPrompt').value.trim();
+    const pixaiPrompt = document.getElementById('editItemPixaiPrompt').value.trim();
+
+    if (!name) {
+      alert('請輸入角色名稱');
+      return;
+    }
+
+    if (!prompt && !pixaiPrompt) {
+      alert('請至少填寫一個 Prompt（普通版本或 PixAI 版本）');
+      return;
+    }
+
+    const updatedItem = {
+      name: name,
+      prompt: prompt || ''
+    };
+
+    if (pixaiPrompt) {
+      updatedItem.pixaiPrompt = pixaiPrompt;
+    }
+
+    allData[currentSectionForEditItem].items[currentIndexForEditItem] = updatedItem;
+
+    if (await saveData()) {
+      closeEditItemModal();
+      renderUI();
+      alert('編輯成功！');
     }
   };
 
