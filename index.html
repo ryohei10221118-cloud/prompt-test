@@ -256,12 +256,12 @@
   }
   .add-category-container {
     text-align: center;
-    margin: 30px 0;
+    margin: 20px 0 30px 0;
   }
   .add-category-btn {
     background: #6f42c1 !important;
-    font-size: 1.1em;
-    padding: 12px 24px;
+    font-size: 1em;
+    padding: 10px 20px;
   }
   input.edit-input {
     width: 100%;
@@ -270,6 +270,138 @@
     border-radius: 4px;
     font-size: 0.95em;
     margin-bottom: 5px;
+  }
+  .items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+  }
+  .item-card {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+  }
+  .item-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    transform: translateY(-2px);
+  }
+  .item-card-name {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 1em;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    animation: fadeIn 0.3s;
+  }
+  .modal.show {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-content {
+    background-color: #fefefe;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    animation: slideIn 0.3s;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #667eea;
+  }
+  .modal-title {
+    font-size: 1.5em;
+    color: #2c3e50;
+    font-weight: bold;
+  }
+  .close-btn {
+    background: #dc3545 !important;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+  }
+  .close-btn:hover {
+    background: #c82333 !important;
+  }
+  .modal-body {
+    margin: 20px 0;
+  }
+  .modal-prompt {
+    background: #f4f4f4;
+    padding: 15px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: monospace;
+    font-size: 0.9em;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .copy-modal-btn {
+    background: #4CAF50 !important;
+    padding: 10px 24px;
+    font-size: 1em;
+  }
+  .pixai-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px dashed #FF6B9D;
+  }
+  .pixai-badge {
+    background: #FF6B9D;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 10px;
   }
 </style>
 </head>
@@ -298,15 +430,26 @@
   <div id="contentArea" class="hidden">
     <h1>🎭 Prompt 管理系統</h1>
 
-    <div class="nav-buttons" id="navButtons"></div>
-
-    <div id="sectionsContainer"></div>
-
     <div class="add-category-container hidden" id="addCategoryContainer">
       <button class="add-category-btn" onclick="addNewCategory()">➕ 新增分類</button>
     </div>
 
+    <div class="nav-buttons" id="navButtons"></div>
+
+    <div id="sectionsContainer"></div>
+
     <button class="back-to-top" id="backToTop" onclick="scrollToTop()">↑</button>
+  </div>
+
+  <!-- Modal -->
+  <div id="itemModal" class="modal" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle"></h2>
+        <button class="close-btn" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
   </div>
 </div>
 
@@ -500,11 +643,11 @@
         </h2>
       `;
       
-      section.items.forEach((item, index) => {
-        html += `<div class="box">`;
-        html += `<h2>${item.name}</h2>`;
-        
-        if (isEditMode) {
+      if (isEditMode) {
+        // 編輯模式 - 顯示完整編輯介面
+        section.items.forEach((item, index) => {
+          html += `<div class="box">`;
+          html += `<h2>${item.name}</h2>`;
           html += `
             <input type="text" class="edit-input" id="${sectionName}-name-${index}" value="${item.name}" placeholder="項目名稱">
             <textarea class="edit-textarea" id="${sectionName}-prompt-${index}">${item.prompt}</textarea>
@@ -517,32 +660,84 @@
               <button class="delete-btn" onclick="deleteItem('${sectionName}', ${index})">🗑️ 刪除</button>
             </div>
           `;
-        } else {
+          html += `</div>`;
+        });
+      } else {
+        // 一般模式 - 顯示卡片網格
+        html += `<div class="items-grid">`;
+        section.items.forEach((item, index) => {
           html += `
-            <pre id="${sectionName}-${index}">${item.prompt}</pre>
-            <button onclick="copyText('${sectionName}-${index}', this)">複製</button>
+            <div class="item-card" onclick="openModal('${sectionName}', ${index})">
+              <div class="item-card-name">${item.name}</div>
+            </div>
           `;
-          
-          if (item.pixaiPrompt) {
-            html += `
-              <div style="margin-top: 15px; padding-top: 15px; border-top: 2px dashed #ddd;">
-                <h3 style="margin: 0 0 8px 0; color: #FF6B9D; font-weight: bold;">
-                  <span style="background: #FF6B9D; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">pixAI 專用</span>
-                </h3>
-                <pre id="${sectionName}-pixai-${index}">${item.pixaiPrompt}</pre>
-                <button onclick="copyText('${sectionName}-pixai-${index}', this)">複製</button>
-              </div>
-            `;
-          }
-        }
-        
+        });
         html += `</div>`;
-      });
+      }
       
       sectionDiv.innerHTML = html;
       container.appendChild(sectionDiv);
     });
   }
+
+  window.openModal = function(sectionName, index) {
+    const item = allData[sectionName].items[index];
+    const modal = document.getElementById('itemModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    
+    modalTitle.textContent = item.name;
+    
+    let bodyHTML = `
+      <div class="modal-prompt">${item.prompt}</div>
+      <div class="modal-actions">
+        <button class="copy-modal-btn" onclick="copyModalText('${sectionName}', ${index}, 'main')">📋 複製</button>
+      </div>
+    `;
+    
+    if (item.pixaiPrompt) {
+      bodyHTML += `
+        <div class="pixai-section">
+          <div class="pixai-badge">pixAI 專用</div>
+          <div class="modal-prompt">${item.pixaiPrompt}</div>
+          <div class="modal-actions">
+            <button class="copy-modal-btn" onclick="copyModalText('${sectionName}', ${index}, 'pixai')">📋 複製 pixAI 版本</button>
+          </div>
+        </div>
+      `;
+    }
+    
+    modalBody.innerHTML = bodyHTML;
+    modal.classList.add('show');
+  };
+
+  window.closeModal = function() {
+    const modal = document.getElementById('itemModal');
+    modal.classList.remove('show');
+  };
+
+  window.closeModalOnBackdrop = function(event) {
+    if (event.target.id === 'itemModal') {
+      closeModal();
+    }
+  };
+
+  window.copyModalText = function(sectionName, index, type) {
+    const item = allData[sectionName].items[index];
+    const text = type === 'pixai' ? item.pixaiPrompt : item.prompt;
+    
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.target;
+      const originalText = btn.textContent;
+      btn.textContent = '✓ 已複製!';
+      btn.style.background = '#2196F3';
+      
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = '';
+      }, 2000);
+    });
+  };
 
   window.toggleEditMode = function() {
     if (!currentUser) {
