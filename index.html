@@ -1,777 +1,482 @@
+<!-- v2.2 Stable with login modal, dropdown menu, fade-in animation -->
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>角色 Prompt 複製工具</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { 
-    font-family: 'Microsoft JhengHei', Arial, sans-serif; 
-    background: #f8f8f8; 
-    padding: 20px; 
-  }
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  .admin-bar {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-  }
-  .user-avatar {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 3px solid #667eea;
-    transition: all 0.3s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  }
-  .user-avatar:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  }
-  .login-btn-small {
-    padding: 8px 16px;
-    background: #4285f4;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: background 0.3s;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  }
-  .login-btn-small:hover {
-    background: #357ae8;
-  }
-  .user-menu {
-    display: none;
-    position: absolute;
-    top: 55px;
-    right: 0;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    padding: 10px;
-    min-width: 200px;
-    z-index: 1001;
-  }
-  .user-menu.show {
-    display: block;
-    animation: slideDown 0.3s;
-  }
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .user-menu-header {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 10px;
-  }
-  .user-menu-name {
-    font-weight: bold;
-    color: #2c3e50;
-    font-size: 0.95em;
-  }
-  .user-menu-email {
-    font-size: 0.8em;
-    color: #999;
-    margin-top: 2px;
-  }
-  .user-menu-item {
-    padding: 10px 15px;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: background 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.9em;
-    margin: 5px 0;
-  }
-  .user-menu-item:hover {
-    background: #f5f5f5;
-  }
-  .user-menu-item.edit { color: #28a745; }
-  .user-menu-item.suggest { color: #17a2b8; }
-  .user-menu-item.logout { color: #dc3545; }
-  h1 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
-  }
-  .nav-buttons {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 30px;
-    align-items: center;
-  }
-  .nav-btn {
-    padding: 12px 24px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1em;
-    font-weight: bold;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  }
-  .nav-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-  }
-  .add-category-btn-inline {
-    padding: 12px 24px;
-    background: #6f42c1 !important;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1em;
-    font-weight: bold;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  }
-  .add-category-btn-inline:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    background: #5a32a3 !important;
-  }
-  .section-title {
-    color: #2c3e50;
-    font-size: 1.5em;
-    margin: 30px 0 15px 0;
-    padding-bottom: 10px;
-    border-bottom: 3px solid #667eea;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .section-actions {
-    display: flex;
-    gap: 10px;
-  }
-  .box { 
-    background: #fff; 
-    border: 1px solid #ccc; 
-    padding: 15px; 
-    margin-bottom: 15px; 
-    border-radius: 6px;
-    transition: box-shadow 0.3s;
-  }
-  .box:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-  h2 { 
-    margin: 0 0 10px 0;
-    color: #2c3e50;
-    font-size: 1.3em;
-  }
-  h3 {
-    margin: 0 0 8px 0;
-    font-size: 1em;
-    color: #555;
-    font-weight: normal;
-  }
-  button { 
-    margin-top: 8px; 
-    padding: 8px 16px; 
-    background: #4CAF50; 
-    color: white; 
-    border: none; 
-    border-radius: 4px; 
-    cursor: pointer;
-    font-size: 0.95em;
-    transition: background 0.3s;
-  }
-  button:hover { 
-    background: #45a049; 
-  }
-  .copied {
-    background: #2196F3 !important;
-  }
-  .section-container {
-    margin-bottom: 30px;
-  }
-  .items-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
-    margin-top: 15px;
-  }
-  .item-card {
-    background: white;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 15px;
-    cursor: pointer;
-    transition: all 0.3s;
-    text-align: center;
-  }
-  .item-card:hover {
-    border-color: #667eea;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-    transform: translateY(-2px);
-  }
-  .item-card-name {
-    font-weight: bold;
-    color: #2c3e50;
-    font-size: 1em;
-  }
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 2000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    animation: fadeIn 0.3s;
-  }
-  .modal.show {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  .modal-content {
-    background-color: #fefefe;
-    padding: 30px;
-    border-radius: 12px;
-    max-width: 600px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    animation: slideIn 0.3s;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  @keyframes slideIn {
-    from { transform: translateY(-50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #667eea;
-  }
-  .modal-title {
-    font-size: 1.5em;
-    color: #2c3e50;
-    font-weight: bold;
-  }
-  .close-btn {
-    background: #dc3545 !important;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 35px;
-    height: 35px;
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    margin: 0;
-  }
-  .close-btn:hover {
-    background: #c82333 !important;
-  }
-  .modal-body {
-    margin: 20px 0;
-  }
-  .modal-prompt {
-    background: #f4f4f4;
-    padding: 15px;
-    border-radius: 8px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    font-family: monospace;
-    font-size: 0.9em;
-    line-height: 1.6;
-    margin-bottom: 15px;
-    max-height: 300px;
-    overflow-y: auto;
-  }
-  .modal-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-  }
-  .copy-modal-btn {
-    background: #4CAF50 !important;
-    padding: 10px 24px;
-    font-size: 1em;
-  }
-  .pixai-section {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 2px dashed #FF6B9D;
-  }
-  .pixai-badge {
-    background: #FF6B9D;
-    color: white;
-    padding: 4px 12px;
-    border-radius: 6px;
-    font-size: 0.9em;
-    font-weight: bold;
-    display: inline-block;
-    margin-bottom: 10px;
-  }
-  .back-to-top {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 24px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    transition: transform 0.3s, opacity 0.3s;
-    z-index: 999;
-    opacity: 0;
-  }
-  .back-to-top.show {
-    display: flex;
-    opacity: 1;
-  }
-  .back-to-top:hover {
-    transform: translateY(-5px);
-  }
-  .edit-textarea {
-    width: 100%;
-    min-height: 100px;
-    padding: 10px;
-    border: 2px solid #667eea;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9em;
-    resize: vertical;
-  }
-  .edit-controls {
-    margin-top: 10px;
-    display: flex;
-    gap: 10px;
-  }
-  .save-btn {
-    background: #007bff !important;
-  }
-  .add-btn {
-    background: #17a2b8 !important;
-    font-size: 0.9em;
-    padding: 6px 12px;
-  }
-  .delete-btn {
-    background: #dc3545 !important;
-  }
-  .delete-section-btn {
-    background: #dc3545 !important;
-    font-size: 0.85em;
-    padding: 6px 12px;
-  }
-  .cancel-btn {
-    background: #6c757d !important;
-  }
-  .hidden {
-    display: none;
-  }
-  .loading {
-    text-align: center;
-    padding: 20px;
-    font-size: 1em;
-    color: #666;
-  }
-  .error-message {
-    background: #fff3cd;
-    border: 1px solid #ffc107;
-    padding: 15px;
-    border-radius: 6px;
-    margin: 20px 0;
-    color: #856404;
-  }
-  input.edit-input {
-    width: 100%;
-    padding: 8px;
-    border: 2px solid #667eea;
-    border-radius: 4px;
-    font-size: 0.95em;
-    margin-bottom: 5px;
-  }
-  .category-input-group {
-    margin-bottom: 15px;
-  }
-  .category-input-label {
-    display: block;
-    text-align: left;
-    margin-bottom: 5px;
-    color: #555;
-    font-size: 0.9em;
-  }
-  .category-input-label.optional {
-    color: #999;
-  }
-  .category-input-label.optional::after {
-    content: " (選填)";
-    color: #999;
-    font-size: 0.85em;
-  }
-  .emoji-input-wrapper {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-  .emoji-input {
-    flex: 1;
-    padding: 10px;
-    border: 2px solid #667eea;
-    border-radius: 4px;
-    font-size: 1.2em;
-    text-align: center;
-  }
-  .emoji-preview {
-    font-size: 32px;
-    min-width: 50px;
-    text-align: center;
-  }
-  .emoji-picker-container {
-    margin-top: 10px;
-  }
-  .emoji-picker-toggle {
-    background: #f0f0f0 !important;
-    color: #333 !important;
-    font-size: 0.85em;
-    padding: 6px 12px;
-    margin: 0;
-  }
-  .emoji-picker {
-    display: none;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 8px;
-    margin: 10px 0;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    max-height: 150px;
-    overflow-y: auto;
-  }
-  .emoji-picker.show {
-    display: grid;
-  }
-  .emoji-option {
-    font-size: 24px;
-    padding: 8px;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: all 0.2s;
-    text-align: center;
-    background: white;
-    border: 2px solid transparent;
-  }
-  .emoji-option:hover {
-    background: #e3f2fd;
-    transform: scale(1.15);
-  }
-  .emoji-option.selected {
-    border-color: #667eea;
-    background: #e8eaf6;
-  }
-  .suggestion-textarea {
-    width: 100%;
-    min-height: 120px;
-    padding: 10px;
-    border: 2px solid #17a2b8;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 0.9em;
-    resize: vertical;
-    margin-bottom: 15px;
-  }
-
-  @media (max-width: 768px) {
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://www.gstatic.com https://www.googleapis.com; connect-src *;">
+  <title>角色提示管理工具 v2.2</title>
+  <style>
     body {
-      padding: 10px;
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 0;
+      color: #333;
     }
-    h1 {
-      font-size: 1.3em;
-      margin-top: 60px;
+    header {
+      background-color: #222;
+      color: white;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .nav-btn, .add-category-btn-inline {
-      padding: 10px 16px;
-      font-size: 0.9em;
+    header h1 {
+      margin: 0;
+      font-size: 20px;
     }
-    .section-title {
-      font-size: 1.2em;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 10px;
+    #user-menu {
+      position: relative;
+      display: inline-block;
     }
-    .section-actions {
+    #user-btn {
+      background: #4caf50;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    #dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      margin-top: 5px;
+      z-index: 999;
+    }
+    #dropdown button {
+      display: block;
       width: 100%;
-      justify-content: flex-start;
+      background: none;
+      border: none;
+      text-align: left;
+      padding: 10px 14px;
+      cursor: pointer;
+      color: #333;
     }
-    .items-grid {
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 8px;
+    #dropdown button:hover {
+      background-color: #eee;
+    }
+    main {
+      padding: 20px;
+    }
+    .section {
+      margin-bottom: 24px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .section h2 {
+      display: flex;
+      align-items: center;
+      font-size: 18px;
+    }
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
     }
     .item-card {
-      padding: 12px 8px;
-    }
-    .item-card-name {
-      font-size: 0.9em;
-    }
-    .modal-content {
-      width: 95%;
-      padding: 20px;
-      max-height: 90vh;
-    }
-    .modal-title {
-      font-size: 1.2em;
-    }
-    .modal-prompt {
-      font-size: 0.85em;
-      padding: 12px;
-      max-height: 200px;
-    }
-    .modal-actions {
-      flex-direction: column;
-    }
-    .modal-actions button {
-      width: 100%;
-    }
-    .admin-bar {
-      position: static;
-      justify-content: center;
-      margin-bottom: 15px;
-    }
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-    }
-    .user-menu {
-      right: auto;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-    .login-btn-small {
-      font-size: 0.85em;
-      padding: 8px 14px;
-    }
-    .emoji-picker {
-      grid-template-columns: repeat(6, 1fr);
-      max-height: 120px;
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
       padding: 10px;
+      cursor: pointer;
+      transition: 0.3s;
     }
-    .emoji-option {
-      font-size: 20px;
-      padding: 6px;
+    .item-card:hover {
+      background: #e3f2fd;
     }
-    .add-btn, .delete-section-btn {
-      font-size: 0.8em;
-      padding: 5px 10px;
+    #topBtn {
+      display: none;
+      position: fixed;
+      bottom: 30px;
+      right: 20px;
+      background-color: #333;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
     }
-    .box {
-      padding: 12px;
+    #offlineNotice {
+      display: none;
+      background-color: #ffeb3b;
+      color: #222;
+      text-align: center;
+      padding: 8px;
     }
-    h2 {
-      font-size: 1.1em;
+    /* 登入 Modal */
+    #loginModal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
-    .edit-textarea {
-      font-size: 0.85em;
+    #loginModal.show {
+      display: flex;
+      opacity: 1;
     }
-    .suggestion-textarea {
-      min-height: 100px;
-      font-size: 0.85em;
+    .login-box {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transform: translateY(-20px);
+      transition: transform 0.3s ease;
     }
-  }
-
-  @media (max-width: 480px) {
-    .nav-buttons {
-      gap: 8px;
+    #loginModal.show .login-box {
+      transform: translateY(0);
     }
-    .items-grid {
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    .login-box h2 {
+      margin-top: 0;
+      text-align: center;
     }
-    .emoji-picker {
-      grid-template-columns: repeat(5, 1fr);
+    .login-box input {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
-  }
-</style>
+    .login-box button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .google-btn {
+      background-color: #4caf50;
+      color: white;
+    }
+    .email-btn {
+      background-color: #2196f3;
+      color: white;
+    }
+    .close-login {
+      float: right;
+      cursor: pointer;
+      font-weight: bold;
+      color: #555;
+    }
+  </style>
 </head>
 <body>
-
-<div class="admin-bar">
-  <button class="login-btn-small hidden" id="loginBtn" onclick="googleLogin()">
-    🔐 管理員登入
-  </button>
-  
-  <div class="hidden" id="userAvatarContainer">
-    <img id="userAvatar" class="user-avatar" src="" alt="User" onclick="toggleUserMenu()">
-    <div class="user-menu" id="userMenu">
-      <div class="user-menu-header">
-        <div class="user-menu-name" id="menuUserName"></div>
-        <div class="user-menu-email" id="menuUserEmail"></div>
-      </div>
-      <div class="user-menu-item edit" onclick="toggleEditModeFromMenu()">
-        <span>✏️</span>
-        <span id="editModeText">進入編輯模式</span>
-      </div>
-      <div class="user-menu-item suggest" onclick="openSuggestionModal()">
-        <span>💡</span>
-        <span>小小建議</span>
-      </div>
-      <div class="user-menu-item logout" onclick="logout()">
-        <span>🚪</span>
-        <span>登出</span>
+  <header>
+    <h1>角色提示管理工具 v2.2</h1>
+    <div id="user-menu">
+      <button id="user-btn">登入</button>
+      <div id="dropdown">
+        <button id="suggestBtn">💬 小建議</button>
+        <button id="logoutBtn">🚪 登出</button>
       </div>
     </div>
-  </div>
-</div>
+  </header>
+  <div id="offlineNotice">⚠️ 離線模式啟用，載入本地資料</div>
+  <main id="main-content"><p>載入中...</p></main>
+  <button id="topBtn">↑</button>
 
-<div class="container">
-  <div class="loading" id="loadingIndicator">載入中...</div>
-  <div class="error-message hidden" id="errorMessage">
-    ⚠️ 無法連接到 Firebase,正在使用離線模式。
-  </div>
-  
-  <div id="contentArea" class="hidden">
-    <h1>🎭 Prompt 管理系統</h1>
-
-    <div class="nav-buttons" id="navButtons"></div>
-
-    <div id="sectionsContainer"></div>
-
-    <button class="back-to-top" id="backToTop" onclick="scrollToTop()">↑</button>
-  </div>
-</div>
-
-<div id="itemModal" class="modal" onclick="closeModalOnBackdrop(event)">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modalTitle"></h2>
-      <button class="close-btn" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body" id="modalBody"></div>
-  </div>
-</div>
-
-<div id="addCategoryModal" class="modal" onclick="closeAddCategoryModalOnBackdrop(event)">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 class="modal-title">➕ 新增分類</h2>
-      <button class="close-btn" onclick="closeAddCategoryModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="category-input-group">
-        <label class="category-input-label">分類名稱</label>
-        <input type="text" id="newCategoryName" class="edit-input" placeholder="例如: 場景、道具、特效..." />
-      </div>
-      <div class="category-input-group">
-        <label class="category-input-label optional">選擇圖示</label>
-        <div class="emoji-input-wrapper">
-          <input type="text" id="emojiInput" class="emoji-input" placeholder="輸入或選擇 emoji" maxlength="2" oninput="updateEmojiFromInput()" />
-          <div class="emoji-preview" id="emojiPreview">📁</div>
-        </div>
-        <div class="emoji-picker-container">
-          <button class="emoji-picker-toggle" onclick="toggleEmojiPicker()">📋 顯示常用圖示</button>
-          <div class="emoji-picker" id="emojiPicker"></div>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="save-btn" onclick="confirmAddCategory()">✓ 確定</button>
-        <button class="cancel-btn" onclick="closeAddCategoryModal()">✕ 取消</button>
-      </div>
+  <!-- 登入 Modal -->
+  <div id="loginModal">
+    <div class="login-box">
+      <span class="close-login" id="closeLogin">✖</span>
+      <h2>登入角色管理工具</h2>
+      <button class="google-btn" id="googleLoginBtn">使用 Google 登入</button>
+      <hr>
+      <input type="email" id="emailInput" placeholder="電子郵件">
+      <input type="password" id="passwordInput" placeholder="密碼">
+      <button class="email-btn" id="emailLoginBtn">信箱登入 / 註冊</button>
     </div>
   </div>
-</div>
 
-<div id="suggestionModal" class="modal" onclick="closeSuggestionModalOnBackdrop(event)">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 class="modal-title">💡 小小建議</h2>
-      <button class="close-btn" onclick="closeSuggestionModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">有任何想法或建議都歡迎告訴我們!</p>
-      <textarea id="suggestionText" class="suggestion-textarea" placeholder="請輸入您的建議..."></textarea>
-      <div class="modal-actions">
-        <button class="save-btn" onclick="submitSuggestion()">📤 送出</button>
-        <button class="cancel-btn" onclick="closeSuggestionModal()">✕ 取消</button>
-      </div>
-    </div>
-  </div>
-</div>
+  <!-- Firebase SDK (非模組版) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-  import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  <script>
+    const firebaseConfig = {
+      apiKey: "你的API_KEY",
+      authDomain: "character-prompts.firebaseapp.com",
+      projectId: "character-prompts",
+      storageBucket: "character-prompts.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef123456"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBNMQG8S1qpUwfZ5Zhq26Jo05qitp4BEes",
-    authDomain: "character-prompts.firebaseapp.com",
-    projectId: "character-prompts",
-    storageBucket: "character-prompts.firebasestorage.app",
-    messagingSenderId: "798087154717",
-    appId: "1:798087154717:web:6cbbfb183cba2a05e60af4",
-    measurementId: "G-CXLV8J9ESW"
-  };
+    const userBtn = document.getElementById("user-btn");
+    const dropdown = document.getElementById("dropdown");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const loginModal = document.getElementById("loginModal");
+    const closeLogin = document.getElementById("closeLogin");
+    const googleLoginBtn = document.getElementById("googleLoginBtn");
+    const emailLoginBtn = document.getElementById("emailLoginBtn");
+    const emailInput = document.getElementById("emailInput");
+    const passwordInput = document.getElementById("passwordInput");
+    const suggestBtn = document.getElementById("suggestBtn");
+    const offlineNotice = document.getElementById("offlineNotice");
+    const mainContent = document.getElementById("main-content");
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
+    let currentUser = null;
+    let allData = {};
+    let isEditing = false;
 
-  let currentUser = null;
-  let isEditMode = false;
-  let allData = {};
-  let selectedEmoji = '📁';
+       // 登入與註冊邏輯
+    googleLoginBtn.addEventListener("click", async () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        await auth.signInWithPopup(provider);
+        loginModal.classList.remove("show");
+      } catch (err) {
+        alert("登入失敗：" + err.message);
+      }
+    });
 
-  const commonEmojis = [
-    '👤', '🎭', '🎨', '🌟', '✨', '💫', '🔮', '🎪',
-    '🏞️', '🌅', '🌆', '🌃', '🌉', '🏙️', '🌇', '🌄',
-    '📸', '🎬', '🎥', '📹', '🎞️', '📷', '📱', '💻',
-    '🎮', '🕹️', '🎲', '🎯', '🎪', '🎨', '🖌️', '✏️',
-    '📝', '📋', '📌', '📍', '🔖', '📁', '📂', '🗂️',
-    '💡', '🔦', '🕯️', '💎', '💍', '👑', '🎩', '🎓'
-  ];
+    emailLoginBtn.addEventListener("click", async () => {
+      const email = emailInput.value.trim();
+      const pass = passwordInput.value.trim();
+      if (!email || !pass) return alert("請輸入信箱與密碼");
+      try {
+        await auth.signInWithEmailAndPassword(email, pass);
+        loginModal.classList.remove("show");
+      } catch (err) {
+        if (err.code === "auth/user-not-found") {
+          await auth.createUserWithEmailAndPassword(email, pass);
+          alert("✅ 已建立帳號並登入");
+          loginModal.classList.remove("show");
+        } else {
+          alert("登入失敗：" + err.message);
+        }
+      }
+    });
 
-  const defaultData = {
-    "角色描述": {
-      icon: "👤",
-      createdAt: 1,
-      items: [
-        { name: "樊季衡", prompt: "male, tanned healthy skin, silvery-blue short hair, naturally falling bangs, very short back hair, blood-red eyes, seductive smile, cross chain earrings, layered metal necklaces, whale bone tattoo on left shoulder, silky open-collar shirt, lean but muscular build, prominent collarbones, defined neck lines" },
-        { name: "樊季昀(大哥)", prompt: "Handsome man, black slicked-back hair, red eyes, black-rimmed glasses, fair slightly tan skin, white shirt with open collar, black suit, restrained sorrow, gold ring on left middle finger" },
-        { name: "戚燁", prompt: "a tall young man with a lean, model-like build, silver-white short messy hair. deep brown eyes, a silver barbell tongue piercing" },
-        { name: "蘇湛", prompt: "a tall young man, a strong and lean build broad shoulders, slightly tousled golden blond hair, short hair, gray eyes, a silver barbell tongue piercing" },
-        { name: "師尊", prompt: "a flamboyant and cunning feng shui master standing front-facing, black shoulder-length tousled hair, sly golden eyes, confident smirk, tassels earrings" },
-        { name: "溫景悅", prompt: "a tall handsome man , black hair with a few natural gray strands, softly parted and slightly wavy, slender big eyes, double eyelids, thin lips, a mole below the left eye" },
-        { name: "楚汐", prompt: "ultra-short clean haircut, no bangs, short pompadour hairstyle, soft beige-brown gradient hair color, slightly wavy texture, narrow black eyes, black irises, one raised eyebrow, thin lips, one-sided smirk, asymmetric cocky grin, gold thin-rimmed glasses slipping down nose, wearing black and white street-style jacket, silver rings, delicate semi-realistic style, soft lighting", pixaiPrompt: "ultra-short clean haircut, no bangs, The Mellow Beige hair,slightly wavy texture,black irises eyes, thin lips, one raised eyebrow,one-sided smirk, asymmetric cocky grin gold thin-rimmed glasses slipping down nose, wearing black and white street-style jacket, silver rings" },
-        { name: "祈盞", prompt: "black long hair tied in elegant ancient bun with loose strands, vivid purple eyes" },
-        { name: "孜蘊", prompt: "ultra wide-angle shot, full-body view
+    closeLogin.onclick = () => loginModal.classList.remove("show");
+
+    userBtn.addEventListener("click", () => {
+      if (!currentUser) {
+        loginModal.classList.add("show");
+      } else {
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!userBtn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = "none";
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      await auth.signOut();
+      currentUser = null;
+      userBtn.textContent = "登入";
+      dropdown.style.display = "none";
+      renderAll();
+    });
+
+    auth.onAuthStateChanged((user) => {
+      currentUser = user;
+      if (user) {
+        userBtn.textContent = user.displayName || user.email;
+        renderAll();
+      } else {
+        userBtn.textContent = "登入";
+        renderAll();
+      }
+    });
+
+    // 資料載入與快取
+    async function loadData() {
+      try {
+        const doc = await db.collection("prompts").doc("data").get();
+        if (doc.exists) {
+          allData = doc.data().sections || {};
+          localStorage.setItem("promptData", JSON.stringify(allData));
+        } else {
+          allData = {};
+        }
+      } catch (err) {
+        console.warn("Firebase 無法連線，使用快取", err);
+        offlineNotice.style.display = "block";
+        const cache = localStorage.getItem("promptData");
+        allData = cache ? JSON.parse(cache) : {};
+      }
+    }
+
+    async function saveData() {
+      if (!currentUser) return alert("請先登入");
+      try {
+        await db.collection("prompts").doc("data").set({ sections: allData });
+        localStorage.setItem("promptData", JSON.stringify(allData));
+        alert("✅ 已儲存至雲端");
+      } catch (err) {
+        alert("⚠️ 雲端儲存失敗，已暫存至本地");
+        localStorage.setItem("promptData", JSON.stringify(allData));
+      }
+    }
+
+    function sortSections() {
+      return Object.entries(allData).sort((a, b) => {
+        if (a[0] === "角色描述") return -1;
+        if (b[0] === "角色描述") return 1;
+        const ta = a[1].createdAt || 0;
+        const tb = b[1].createdAt || 0;
+        return ta - tb;
+      });
+    }
+
+    function renderAll() {
+      mainContent.innerHTML = "";
+      const sorted = sortSections();
+      if (!sorted.length) {
+        mainContent.innerHTML = "<p>目前沒有角色資料</p>";
+        return;
+      }
+      sorted.forEach(([name, section]) => {
+        const sec = document.createElement("div");
+        sec.className = "section";
+        sec.innerHTML = `<h2>${section.icon || "📁"} ${name}</h2>`;
+
+        const grid = document.createElement("div");
+        grid.className = "item-grid";
+        (section.items || []).forEach((item) => {
+          const card = document.createElement("div");
+          card.className = "item-card";
+          card.innerHTML = `<strong>${item.name}</strong>`;
+          card.addEventListener("click", () => showModal(item));
+          grid.appendChild(card);
+        });
+
+        if (currentUser) {
+          const addBtn = document.createElement("button");
+          addBtn.textContent = "➕ 新增角色";
+          addBtn.onclick = () => addItem(name);
+          sec.appendChild(addBtn);
+        }
+
+        sec.appendChild(grid);
+        mainContent.appendChild(sec);
+      });
+      if (currentUser) {
+        const saveBtn = document.createElement("button");
+        saveBtn.textContent = "💾 儲存全部";
+        saveBtn.onclick = saveData;
+        mainContent.appendChild(saveBtn);
+      }
+    }
+
+    // 顯示角色詳細
+    function showModal(item) {
+      const modal = document.createElement("div");
+      modal.className = "modal";
+      Object.assign(modal.style, {
+        position: "fixed",
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.6)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 2000
+      });
+      const box = document.createElement("div");
+      Object.assign(box.style, {
+        background: "white",
+        borderRadius: "12px",
+        padding: "20px",
+        width: "90%",
+        maxWidth: "500px",
+        maxHeight: "80vh",
+        overflowY: "auto"
+      });
+      box.innerHTML = `<h2>${item.name}</h2><pre>${item.prompt}</pre>`;
+      const copyBtn = document.createElement("button");
+      copyBtn.textContent = "📋 複製 Prompt";
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(item.prompt || "");
+        alert("✅ 已複製");
+      };
+      box.appendChild(copyBtn);
+      modal.appendChild(box);
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) modal.remove();
+      });
+      document.body.appendChild(modal);
+    }
+
+    function addItem(sectionName) {
+      const name = prompt("角色名稱：");
+      if (!name) return;
+      const promptText = prompt("角色描述 / Prompt：") || "";
+      allData[sectionName].items.push({ name, prompt: promptText });
+      renderAll();
+    }
+
+    // 小建議表單
+    suggestBtn.addEventListener("click", () => {
+      dropdown.style.display = "none";
+      const form = document.createElement("div");
+      form.className = "modal";
+      Object.assign(form.style, {
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.6)", display: "flex",
+        alignItems: "center", justifyContent: "center", zIndex: 3000
+      });
+      const box = document.createElement("div");
+      Object.assign(box.style, {
+        background: "white", borderRadius: "10px",
+        padding: "20px", width: "90%", maxWidth: "400px"
+      });
+      box.innerHTML = `
+        <h3>💬 提出小建議</h3>
+        <textarea id="suggestText" style="width:100%;height:100px;"></textarea>
+        <button id="sendSuggest">送出</button>
+      `;
+      const sendBtn = box.querySelector("#sendSuggest");
+      sendBtn.onclick = () => {
+        const val = box.querySelector("#suggestText").value.trim();
+        if (!val) return alert("請輸入內容");
+        alert("✅ 感謝你的建議！(本地暫存)");
+        form.remove();
+      };
+      form.appendChild(box);
+      form.addEventListener("click", (e) => {
+        if (e.target === form) form.remove();
+      });
+      document.body.appendChild(form);
+    });
+
+    // 回頂按鈕
+    const topBtn = document.getElementById("topBtn");
+    window.addEventListener("scroll", () => {
+      topBtn.style.display = window.scrollY > 200 ? "block" : "none";
+    });
+    topBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    // 初始化
+    (async function init() {
+      await loadData();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
