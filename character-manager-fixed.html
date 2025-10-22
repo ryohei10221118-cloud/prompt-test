@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>角色分類管理工具</title>
+
+<style>
+:root {
+  --primary: linear-gradient(135deg, #7b5cff, #6a9cff);
+  --bg-color: #f4f5ff;
+  --card-bg: #ffffff;
+  --accent: #806cff;
+  --shadow: rgba(0, 0, 0, 0.15);
+  --gray-text: #555;
+}
+
+/* 頁面整體設定 */
+body {
+  margin: 0;
+  font-family: "Noto Sans TC", sans-serif;
+  background: var(--bg-color);
+  color: #222;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 頁首 */
+header {
+  width: 100%;
+  text-align: center;
+  background: var(--primary);
+  color: white;
+  padding: 18px 10px;
+  font-size: clamp(1.3em, 2.5vw, 1.8em);
+  font-weight: bold;
+  letter-spacing: 1px;
+  box-shadow: 0 3px 10px var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* 導覽列 */
+.navbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  justify-content: center;
+  background: rgba(255,255,255,0.45);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 6px var(--shadow);
+  width: 100%;
+}
+.navbar button {
+  flex: 0 1 auto;
+  border: none;
+  background: var(--accent);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.navbar button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* 分類容器 */
+.category {
+  width: 95%;
+  max-width: 1000px;
+  background: var(--card-bg);
+  margin: 18px auto;
+  border-radius: 16px;
+  box-shadow: 0 3px 10px var(--shadow);
+  padding: 16px;
+}
+
+/* 分類標題 */
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: var(--accent);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.category-header button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+  margin-left: 5px;
+}
+.category-header button:hover {
+  opacity: 0.9;
+}
+.category-header button.delete-btn {
+  background: #ff4757;
+}
+.category-header button.add-char-btn {
+  background: #1dd1a1;
+}
+
+/* 卡片區塊 */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.card {
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 3px 6px var(--shadow);
+  padding: 14px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px var(--shadow);
+}
+.card-title {
+  font-weight: bold;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.card-desc {
+  font-size: 0.95em;
+  color: var(--gray-text);
+  background: #f6f6ff;
+  padding: 8px 10px;
+  border-radius: 10px;
+  min-height: 50px;
+}
+
+/* 彈窗通用 */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.45);
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+.modal-content {
+  background: white;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px var(--shadow);
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  position: relative;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal-content h3 {
+  margin-top: 0;
+  color: var(--accent);
+}
+.modal-content input, .modal-content textarea {
+  width: 90%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 1em;
+}
+.modal-content button {
+  margin-top: 15px;
+  margin-left: 5px;
+  margin-right: 5px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.modal-content button.delete-character-btn {
+  background: #ff4757;
+}
+.modal-content button.btn-secondary {
+  background: #95a5a6;
+}
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: #888;
+}
+.close-btn:hover { color: #000; }
+
+/* 小建議按鈕 */
+#suggestionBtn {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 55px;
+  height: 55px;
+  box-shadow: 0 4px 10px var(--shadow);
+  font-size: 1.3em;
+  cursor: pointer;
+  z-index: 150;
+  transition: 0.3s;
+}
+#suggestionBtn:hover { transform: scale(1.05); }
+
+/* 回頂按鈕 */
+#scrollTopBtn {
+  position: fixed;
+  bottom: 90px;
+  right: 30px;
+  background: #6a9cff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  font-size: 1.1em;
+  cursor: pointer;
+  display: none;
+  box-shadow: 0 4px 10px var(--shadow);
+  transition: 0.3s;
+  z-index: 150;
+}
+#scrollTopBtn:hover { transform: scale(1.1); }
+
+/* 登入窗 */
+#loginModal .modal-content {
+  max-width: 360px;
+}
+#loginModal input {
+  width: 90%;
+  margin-bottom: 10px;
+}
+#loginModal button {
+  width: 90%;
+  margin-top: 10px;
+}
+
+/* 角色詳情彈窗樣式 */
+.character-detail {
+  background: #f2f2ff;
+  padding: 15px;
+  border-radius: 10px;
+  margin: 15px 0;
+  text-align: left;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* 手機適應 */
+@media (max-width: 600px) {
+  header { font-size: 1.5em; padding: 15px 8px; }
+  .category { padding: 14px; }
+  .navbar button { padding: 6px 10px; font-size: 0.9em; }
+  .modal-content { width: 92%; padding: 20px; }
+  .category-header { font-size: 1em; }
+  .category-header button { font-size: 0.8em; padding: 5px 10px; }
+}
+</style>
+
+</head>
+<body>
+
+<header>角色管理工具</header>
+
+<!-- 導覽列 -->
+<div class="navbar">
+  <button id="loginBtn">登入 / 登出</button>
+  <button id="addCategoryBtn">＋ 新增分類</button>
+</div>
+
+<!-- 類別容器 -->
+<div id="categoriesContainer"></div>
+
+<!-- 小建議按鈕 -->
+<button id="suggestionBtn" title="提出小建議">💡</button>
+
+<!-- 回到最上方 -->
+<button id="scrollTopBtn" title="回到最上方">↑</button>
+
+<!-- 登入視窗 -->
+<div id="loginModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" id="closeLoginBtn">×</span>
+    <h3>登入或註冊帳號</h3>
+    <input type="text" id="loginAccount" placeholder="帳號" />
+    <input type="password" id="loginPassword" placeholder="密碼" />
+    <button id="loginSubmitBtn">登入 / 註冊</button>
+  </div>
+</div>
+
+<!-- 小建議視窗 -->
+<div id="suggestionModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" id="closeSuggestionBtn">×</span>
+    <h3>提出小建議</h3>
+    <textarea id="suggestionText" rows="5" placeholder="輸入你的建議..."></textarea>
+    <button id="submitSuggestionBtn">送出</button>
+  </div>
+</div>
+
+<!-- 新增分類視窗 -->
+<div id="addCategoryModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" id="closeAddCategoryBtn">×</span>
+    <h3>新增分類</h3>
+    <input type="text" id="categoryNameInput" placeholder="請輸入分類名稱">
+    <div>
+      <button id="confirmAddCategory" class="btn-primary">新增</button>
+      <button id="cancelAddCategory" class="btn-secondary">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新增角色視窗 -->
+<div id="addCharacterModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" id="closeAddCharacterBtn">×</span>
+    <h3>新增角色</h3>
+    <input type="text" id="charName" placeholder="角色名稱">
+    <textarea id="charFull" rows="4" placeholder="角色描述 / Prompt"></textarea>
+    <div>
+      <button id="saveCharacterBtn" class="btn-primary">新增</button>
+      <button id="cancelAddCharacter" class="btn-secondary">取消</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// --- Firebase 初始化 ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "你的APIKEY",
+  authDomain: "你的專案.firebaseapp.com",
+  projectId: "你的專案ID",
+  storageBucket: "你的專案.appspot.com",
+  messagingSenderId: "你的senderId",
+  appId: "你的appId"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// --- 全域變數 ---
+let currentUser = null;
+let currentCategoryId = null;
+
+// --- 登入 / 登出 ---
+const loginBtn = document.getElementById("loginBtn");
+const loginModal = document.getElementById("loginModal");
+
+loginBtn.addEventListener("click", () => {
+  if (currentUser) {
+    signOut(auth).then(() => {
+      currentUser = null;
+      alert("已登出！");
+      loginBtn.textContent = "登入 / 登出";
+      loadCategories();
+    });
+  } else {
+    loginModal.style.display = "flex";
+  }
+});
+
+document.getElementById("closeLoginBtn").addEventListener("click", () => {
+  loginModal.style.display = "none";
+});
+
+document.getElementById("loginSubmitBtn").addEventListener("click", async () => {
+  const account = document.getElementById("loginAccount").value;
+  const password = document.getElementById("loginPassword").value;
+
+  if (!account || !password) {
+    alert("請輸入帳號和密碼！");
+    return;
+  }
+
+  try {
+    await signInWithEmailAndPassword(auth, account, password);
+    alert("登入成功！");
+  } catch (error) {
+    try {
+      await createUserWithEmailAndPassword(auth, account, password);
+      alert("註冊成功並已登入！");
+    } catch (registerError) {
+      alert("登入/註冊失敗：" + registerError.message);
+    }
+  }
+  loginModal.style.display = "none";
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    loginBtn.textContent = "登出 (" + user.email + ")";
+    loadCategories();
+  } else {
+    currentUser = null;
+    loginBtn.textContent = "登入 / 登出";
+    loadCategories();
+  }
+});
+
+// --- 小建議 ---
+const suggestionModal = document.getElementById("suggestionModal");
+
+document.getElementById("suggestionBtn").addEventListener("click", () => {
+  suggestionModal.style.display = "flex";
+});
+
+document.getElementById("closeSuggestionBtn").addEventListener("click", () => {
+  suggestionModal.style.display = "none";
+});
+
+document.getElementById("submitSuggestionBtn").addEventListener("click", async () => {
+  const text = document.getElementById("suggestionText").value.trim();
+  if (!text) {
+    alert("請輸入內容！");
+    return;
+  }
+  try {
+    await addDoc(collection(db, "suggestions"), {
+      text,
+      user: currentUser ? currentUser.email : "訪客",
+      time: new Date()
+    });
+    alert("感謝你的建議！");
+    document.getElementById("suggestionText").value = "";
+    suggestionModal.style.display = "none";
+  } catch (e) {
+    console.error("Error adding suggestion: ", e);
+    alert("送出失敗：" + e.message);
+  }
+});
+
+// --- 回到最上方按鈕 ---
+const scrollBtn = document.getElementById("scrollTopBtn");
+window.addEventListener("scroll", () => {
+  scrollBtn.style.display = window.scrollY > 200 ? "block" : "none";
+});
+scrollBtn.addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+// --- 載入所有分類和角色 ---
+const categoriesContainer = document.getElementById("categoriesContainer");
+
+async function loadCategories() {
+  try {
+    const q = query(collection(db, "categories"), orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(q);
+    categoriesContainer.innerHTML = "";
+
+    if (querySnapshot.empty) {
+      categoriesContainer.innerHTML = "<p style='text-align:center; color:#999; margin-top:50px;'>尚無分類，請先新增分類！</p>";
+      return;
+    }
+
+    querySnapshot.forEach((docSnap) => {
+      const categoryData = docSnap.data();
+      const categoryDiv = document.createElement("div");
+      categoryDiv.className = "category";
+      categoryDiv.id = `category-${docSnap.id}`;
+
+      // 類別標題
+      const header = document.createElement("div");
+      header.className = "category-header";
+
+      const titleSpan = document.createElement("span");
+      titleSpan.textContent = categoryData.name;
+      header.appendChild(titleSpan);
+
+      if (currentUser) {
+        const buttonContainer = document.createElement("div");
+
+        const addCharBtn = document.createElement("button");
+        addCharBtn.className = "add-char-btn";
+        addCharBtn.textContent = "➕ 新增角色";
+        addCharBtn.onclick = () => showAddCharacter(docSnap.id);
+        buttonContainer.appendChild(addCharBtn);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.textContent = "🗑️ 刪除分類";
+        deleteBtn.onclick = () => deleteCategory(docSnap.id);
+        buttonContainer.appendChild(deleteBtn);
+
+        header.appendChild(buttonContainer);
+      }
+
+      categoryDiv.appendChild(header);
+
+      // 角色卡片群
+      const cardsDiv = document.createElement("div");
+      cardsDiv.className = "cards";
+
+      if (categoryData.characters && categoryData.characters.length > 0) {
+        categoryData.characters.forEach((ch, index) => {
+          const card = document.createElement("div");
+          card.className = "card";
+
+          const cardTitle = document.createElement("div");
+          cardTitle.className = "card-title";
+          cardTitle.textContent = ch.name;
+
+          const cardDesc = document.createElement("div");
+          cardDesc.className = "card-desc";
+          cardDesc.textContent = ch.short || (ch.full ? ch.full.substring(0, 100) + "..." : "無描述");
+
+          card.appendChild(cardTitle);
+          card.appendChild(cardDesc);
+          card.onclick = () => showCharacterModal(ch, docSnap.id, index);
+          cardsDiv.appendChild(card);
+        });
+      } else {
+        cardsDiv.innerHTML = "<p style='color:#999; padding:20px; text-align:center;'>此分類尚無角色</p>";
+      }
+
+      categoryDiv.appendChild(cardsDiv);
+      categoriesContainer.appendChild(categoryDiv);
+    });
+  } catch (e) {
+    console.error("Error loading categories: ", e);
+    categoriesContainer.innerHTML = "<p style='text-align:center; color:red; margin-top:50px;'>載入失敗：" + e.message + "</p>";
+  }
+}
+
+// --- 顯示角色詳情（含刪除按鈕） ---
+function showCharacterModal(ch, categoryId, characterIndex) {
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.style.display = "flex";
+
+  const modalContent = document.createElement("div");
+  modalContent.className = "modal-content";
+
+  const closeBtn = document.createElement("span");
+  closeBtn.className = "close-btn";
+  closeBtn.textContent = "×";
+  closeBtn.onclick = () => modal.remove();
+
+  const title = document.createElement("h3");
+  title.textContent = ch.name;
+
+  const detail = document.createElement("div");
+  detail.className = "character-detail";
+  detail.textContent = ch.full;
+
+  const copyBtn = document.createElement("button");
+  copyBtn.textContent = "📋 複製 Prompt";
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(ch.full);
+    alert("已複製 Prompt！");
+  };
+
+  modalContent.appendChild(closeBtn);
+  modalContent.appendChild(title);
+  modalContent.appendChild(detail);
+  modalContent.appendChild(copyBtn);
+
+  // 如果有登入，顯示刪除按鈕
+  if (currentUser) {
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "delete-character-btn";
+    deleteBtn.textContent = "🗑️ 刪除角色";
+    deleteBtn.onclick = () => deleteCharacter(categoryId, characterIndex, modal);
+    modalContent.appendChild(deleteBtn);
+  }
+
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+
+  // 點擊背景關閉
+  modal.onclick = (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  };
+}
+
+// --- 刪除角色 ---
+async function deleteCharacter(categoryId, characterIndex, modal) {
+  const input = prompt("確認刪除請輸入「刪除」");
+  if (input !== "刪除") {
+    alert("取消刪除");
+    return;
+  }
+
+  try {
+    const catRef = doc(db, "categories", categoryId);
+    const catSnap = await getDoc(catRef);
+
+    if (catSnap.exists()) {
+      const existing = catSnap.data().characters || [];
+      existing.splice(characterIndex, 1); // 刪除指定索引的角色
+      await updateDoc(catRef, { characters: existing });
+      alert("已刪除角色");
+      modal.remove();
+      loadCategories();
+    }
+  } catch (e) {
+    console.error("Error deleting character:", e);
+    alert("刪除失敗：" + e.message);
+  }
+}
+
+// --- 刪除分類 ---
+async function deleteCategory(id) {
+  const input = prompt("確認刪除請輸入「刪除」");
+  if (input !== "刪除") {
+    alert("取消刪除");
+    return;
+  }
+
+  try {
+    await deleteDoc(doc(db, "categories", id));
+    alert("已刪除分類");
+    loadCategories();
+  } catch (e) {
+    console.error("Error deleting category:", e);
+    alert("刪除失敗：" + e.message);
+  }
+}
+
+// --- 新增分類 ---
+const addCategoryModal = document.getElementById("addCategoryModal");
+
+document.getElementById("addCategoryBtn").addEventListener("click", () => {
+  if (!currentUser) {
+    alert("請先登入！");
+    return;
+  }
+  addCategoryModal.style.display = "flex";
+});
+
+document.getElementById("closeAddCategoryBtn").addEventListener("click", () => {
+  addCategoryModal.style.display = "none";
+});
+
+document.getElementById("cancelAddCategory").addEventListener("click", () => {
+  addCategoryModal.style.display = "none";
+});
+
+document.getElementById("confirmAddCategory").addEventListener("click", async () => {
+  const name = document.getElementById("categoryNameInput").value.trim();
+  if (!name) {
+    alert("請輸入分類名稱！");
+    return;
+  }
+  try {
+    await addDoc(collection(db, "categories"), {
+      name,
+      createdAt: new Date(),
+      characters: []
+    });
+    alert("分類新增完成！");
+    addCategoryModal.style.display = "none";
+    document.getElementById("categoryNameInput").value = "";
+    loadCategories();
+  } catch (e) {
+    console.error("Error adding category:", e);
+    alert("新增失敗：" + e.message);
+  }
+});
+
+// --- 新增角色 ---
+const addCharacterModal = document.getElementById("addCharacterModal");
+
+function showAddCharacter(categoryId) {
+  if (!currentUser) {
+    alert("請先登入！");
+    return;
+  }
+  currentCategoryId = categoryId;
+  document.getElementById("charName").value = "";
+  document.getElementById("charFull").value = "";
+  addCharacterModal.style.display = "flex";
+}
+
+document.getElementById("closeAddCharacterBtn").addEventListener("click", () => {
+  addCharacterModal.style.display = "none";
+});
+
+document.getElementById("cancelAddCharacter").addEventListener("click", () => {
+  addCharacterModal.style.display = "none";
+});
+
+document.getElementById("saveCharacterBtn").addEventListener("click", async () => {
+  const name = document.getElementById("charName").value.trim();
+  const full = document.getElementById("charFull").value.trim();
+
+  if (!name || !full) {
+    alert("請完整填寫角色資料！");
+    return;
+  }
+
+  try {
+    const catRef = doc(db, "categories", currentCategoryId);
+    const catSnap = await getDoc(catRef);
+
+    if (catSnap.exists()) {
+      const existing = catSnap.data().characters || [];
+      existing.push({
+        name,
+        short: full.substring(0, 100) + (full.length > 100 ? "..." : ""),
+        full
+      });
+      await updateDoc(catRef, { characters: existing });
+      alert("角色新增完成！");
+      addCharacterModal.style.display = "none";
+      loadCategories();
+    }
+  } catch (e) {
+    console.error("Error adding character:", e);
+    alert("新增失敗：" + e.message);
+  }
+});
+
+// 初始載入
+loadCategories();
+
+</script>
+</body>
+</html>
