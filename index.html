@@ -1,620 +1,545 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>角色提示管理工具 v2.3</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>角色提示管理工具 v3.0（雲端共享版）</title>
+
   <style>
     body {
-      font-family: 'Noto Sans TC', sans-serif;
-      background: #f4f6fb;
+      background: #f7f8fc;
+      font-family: "Noto Sans TC", "Segoe UI", sans-serif;
+      color: #333;
       margin: 0;
-      color: #2d2d55;
+      padding: 0;
     }
 
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #4a4e91;
-      color: white;
-      padding: 12px 18px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      background: #4b4ba5;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     header h1 {
-      font-size: 1.3rem;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    header .user-info {
+      position: relative;
+    }
+
+    header .user-info button {
+      background: #6f6fe0;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.25s ease;
+    }
+
+    header .user-info button:hover {
+      background: #5a5ad8;
+    }
+
+    /* ======= 下拉選單 ======= */
+    #userMenu {
+      position: absolute;
+      right: 0;
+      top: 40px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      padding: 8px 0;
+      width: 140px;
+      display: none;
+      z-index: 20;
+    }
+
+    #userMenu ul {
+      list-style: none;
+      padding: 0;
       margin: 0;
     }
 
-    #userMenu {
-      position: relative;
-    }
-
-    #userBtn {
-      background: #5a67d8;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    #userBtn:hover {
-      background: #6b74e0;
-    }
-
-    #dropdown {
-      position: absolute;
-      top: 40px;
-      right: 0;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
-      z-index: 1000;
-    }
-
-    #dropdown button {
-      background: none;
-      border: none;
+    #userMenu li {
       padding: 10px 14px;
-      text-align: left;
-      width: 100%;
       cursor: pointer;
       color: #333;
-      transition: all 0.2s;
+      font-weight: 500;
+      transition: background 0.2s;
     }
 
-    #dropdown button:hover {
-      background: #edf2f7;
+    #userMenu li:hover {
+      background: #f1f0ff;
+      color: #4b4ba5;
     }
 
-    #offlineNotice {
-      background: #ffe3e3;
-      color: #b00020;
-      text-align: center;
-      padding: 8px;
-      display: none;
-      font-size: 0.9rem;
-    }
-
-    main {
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 0 16px;
-    }
-
-    .section {
-      background: white;
-      border-radius: 14px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 16px 20px;
-      margin-bottom: 20px;
-    }
-
-    .section h2 {
+    /* ======= 導覽列 ======= */
+    .nav-scroll {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 2px solid #c3bff7;
-      padding-bottom: 6px;
-      font-size: 1.1rem;
-      color: #2d2d55;
-      margin-bottom: 12px;
-    }
-
-    .section-actions {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .add-btn, .del-btn {
-      border: none;
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .add-btn {
-      background: linear-gradient(90deg, #5a67d8, #805ad5);
-      color: white;
-    }
-
-    .add-btn:hover {
-      box-shadow: 0 3px 8px rgba(90, 103, 216, 0.4);
-    }
-
-    .del-btn {
-      background: linear-gradient(90deg, #e53e3e, #c53030);
-      color: white;
-    }
-
-    .del-btn:hover {
-      box-shadow: 0 3px 8px rgba(229, 62, 62, 0.4);
-    }
-
-    .item-grid {
-      display: flex;
-      flex-wrap: wrap;
       gap: 10px;
+      overflow-x: auto;
+      background: transparent;
+      padding: 10px 16px;
+      white-space: nowrap;
+      border-bottom: 2px solid rgba(108, 99, 255, 0.3);
+      position: sticky;
+      top: 60px;
+      z-index: 10;
     }
 
-    .item-card {
-      position: relative;
-      background: #f8f8ff;
-      border: 1px solid #d7d7f7;
+    .nav-scroll::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .nav-scroll::-webkit-scrollbar-thumb {
+      background: rgba(108, 99, 255, 0.4);
       border-radius: 10px;
-      padding: 10px 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-      flex: 1 1 calc(50% - 10px);
-      min-width: 220px;
     }
 
-    .item-card:hover {
-      background: #ebecff;
+    .nav-scroll button {
+      background: rgba(108, 99, 255, 0.15);
+      border: none;
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-weight: 600;
+      color: #3a328f;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .nav-scroll button:hover {
+      background: rgba(108, 99, 255, 0.25);
       transform: translateY(-2px);
     }
 
-    .delete-icon {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      background: #e53e3e;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 22px;
-      height: 22px;
-      cursor: pointer;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* 通用 Modal */
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0,0,0,0.4);
-      z-index: 2000;
-    }
-
-    .modal.show {
-      display: flex;
-    }
-
-    .modal-box {
-      background: rgba(255,255,255,0.9);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-      padding: 25px 30px;
+    /* ======= 分類卡片 ======= */
+    .category {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+      margin: 24px auto;
+      padding: 18px 24px;
       width: 90%;
-      max-width: 380px;
-      text-align: center;
-      animation: slideUp 0.3s ease;
+      max-width: 1000px;
+      transition: all 0.3s ease;
     }
 
-    @keyframes slideUp {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    .modal-box input, .modal-box textarea {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      font-size: 0.95rem;
-      transition: all 0.2s;
-      resize: none;
-    }
-
-    .modal-box input:focus, .modal-box textarea:focus {
-      border-color: #5a67d8;
-      box-shadow: 0 0 5px rgba(90,103,216,0.3);
-      outline: none;
-    }
-
-    .modal-actions {
+    .category h2 {
       display: flex;
-      justify-content: space-around;
-      margin-top: 10px;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 1.1rem;
+      color: #4b4ba5;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 6px;
     }
 
-    .modal-actions button {
-      border: none;
-      border-radius: 10px;
-      padding: 10px 20px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.2s;
+    .category-buttons {
+      display: flex;
+      gap: 10px;
     }
 
-    .confirm-btn {
-      background: linear-gradient(90deg, #5a67d8, #805ad5);
+    .add-btn {
+      background: #6f6fe0;
       color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: 0.25s ease;
+      font-weight: 600;
     }
 
-    .cancel-btn {
-      background: #ccc;
+    .add-btn:hover {
+      background: #5b5bd0;
     }
 
-    .confirm-btn:hover { box-shadow: 0 3px 8px rgba(90,103,216,0.4); }
-    .cancel-btn:hover { background: #bbb; }
+    .delete-cat-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: 0.25s ease;
+      font-weight: 600;
+    }
+
+    .delete-cat-btn:hover {
+      background: #d03528;
+    }
+
+    /* ======= 角色小卡 ======= */
+    .category-card {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .category-card .item {
+      flex: 1 1 calc(50% - 10px);
+      background: #f9f9ff;
+      border: 1px solid #e0e0ff;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 500;
+      position: relative;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      cursor: pointer;
+    }
+
+    .category-card .item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+    }
+
+    .delete-char {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: none;
+      border: none;
+      color: #e74c3c;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .delete-char:hover {
+      transform: scale(1.2);
+    }
+
+    /* ======= 彈出視窗 ======= */
+    .modal-box {
+      background: linear-gradient(180deg, #ffffff, #f9f9ff);
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      padding: 20px 30px;
+      max-width: 460px;
+      width: 100%;
+      margin: auto;
+      border-top: 4px solid #6f6fe0;
+    }
+
+    .modal-box h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #4b4ba5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-box h3 button {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: #999;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .modal-box h3 button:hover {
+      color: #555;
+    }
+
+    @media (max-width: 768px) {
+      .category-card .item {
+        flex: 1 1 100%;
+      }
+      .nav-scroll button {
+        font-size: 0.85rem;
+        padding: 5px 10px;
+      }
+      .modal-box {
+        width: 90%;
+        padding: 16px;
+      }
+    }
   </style>
 </head>
 
   <body>
   <header>
-    <h1>角色提示管理工具 v2.3</h1>
-    <div id="userMenu">
-      <button id="userBtn">登入</button>
-      <div id="dropdown">
-        <button id="suggestBtn">💬 小建議</button>
-        <button id="logoutBtn">登出</button>
+    <h1>角色提示管理工具 v3.0（雲端共享版）</h1>
+    <div class="user-info">
+      <button id="loginBtn">登入</button>
+      <div id="userMenu" class="hidden">
+        <ul>
+          <li id="suggestBtn">💬 小建議</li>
+          <li id="logoutBtn">登出</li>
+        </ul>
       </div>
     </div>
   </header>
 
-  <div id="offlineNotice">⚠️ 離線模式啟用，載入本地資料</div>
-  <main id="mainContent">載入中...</main>
-
-  <!-- 通用彈窗模組 -->
-  <div id="loginModal" class="modal">
-    <div class="modal-box">
-      <h2>登入角色管理工具</h2>
-      <input type="email" id="emailInput" placeholder="電子郵件">
-      <input type="password" id="passwordInput" placeholder="密碼">
-      <button id="emailLoginBtn" class="confirm-btn" style="width:100%;margin-top:5px;">信箱登入 / 註冊</button>
-      <button id="googleLoginBtn" class="confirm-btn" style="width:100%;margin-top:5px;background:linear-gradient(90deg,#34a853,#0f9d58)">使用 Google 登入</button>
-      <button class="cancel-btn" id="closeLogin" style="width:100%;margin-top:10px;">取消</button>
-    </div>
+  <!-- 🔹導覽列 -->
+  <div class="nav-scroll" id="navBar">
+    <button onclick="scrollToCategory('characters')">角色描述</button>
+    <button onclick="scrollToCategory('style')">光影風格</button>
+    <button onclick="scrollToCategory('outfit')">服裝風格</button>
+    <button onclick="scrollToCategory('hair')">髮型設計</button>
+    <button onclick="scrollToCategory('color')">配色方案</button>
   </div>
 
-  <div id="sectionModal" class="modal">
-    <div class="modal-box">
-      <h2>新增分類</h2>
-      <input type="text" id="sectionName" placeholder="分類名稱">
-      <input type="text" id="sectionIcon" placeholder="分類圖示 (可留空)">
-      <div class="modal-actions">
-        <button class="confirm-btn" id="addSectionConfirm">確定</button>
-        <button class="cancel-btn" id="addSectionCancel">取消</button>
+  <!-- 🔹角色描述 -->
+  <section id="characters" class="category">
+    <h2>
+      <span>🧍‍♂️ 角色描述</span>
+      <div class="category-buttons">
+        <button class="add-btn" onclick="openAddCharacterModal('characters')">＋新增</button>
       </div>
-    </div>
-  </div>
+    </h2>
+    <div class="category-card" id="characters-list"></div>
+  </section>
 
-  <div id="itemModal" class="modal">
-    <div class="modal-box">
-      <h2>新增角色</h2>
-      <input type="text" id="itemName" placeholder="角色名稱">
-      <textarea id="itemPrompt" placeholder="角色描述 / Prompt" rows="5"></textarea>
-      <div class="modal-actions">
-        <button class="confirm-btn" id="addItemConfirm">確定</button>
-        <button class="cancel-btn" id="addItemCancel">取消</button>
+  <!-- 🔹光影風格 -->
+  <section id="style" class="category">
+    <h2>
+      <span>🎨 光影風格</span>
+      <div class="category-buttons">
+        <button class="add-btn" onclick="openAddCharacterModal('style')">＋新增</button>
       </div>
-    </div>
-  </div>
+    </h2>
+    <div class="category-card" id="style-list"></div>
+  </section>
 
-  <div id="suggestModal" class="modal">
-    <div class="modal-box">
-      <h2>💬 小建議</h2>
-      <textarea id="suggestText" placeholder="請輸入您的建議..." rows="6"></textarea>
-      <div class="modal-actions">
-        <button class="confirm-btn" id="suggestConfirm">送出</button>
-        <button class="cancel-btn" id="suggestCancel">取消</button>
+  <!-- 🔹服裝風格 -->
+  <section id="outfit" class="category">
+    <h2>
+      <span>👗 服裝風格</span>
+      <div class="category-buttons">
+        <button class="add-btn" onclick="openAddCharacterModal('outfit')">＋新增</button>
       </div>
+    </h2>
+    <div class="category-card" id="outfit-list"></div>
+  </section>
+
+  <!-- 🔹髮型設計 -->
+  <section id="hair" class="category">
+    <h2>
+      <span>💇‍♀️ 髮型設計</span>
+      <div class="category-buttons">
+        <button class="add-btn" onclick="openAddCharacterModal('hair')">＋新增</button>
+      </div>
+    </h2>
+    <div class="category-card" id="hair-list"></div>
+  </section>
+
+  <!-- 🔹配色方案 -->
+  <section id="color" class="category">
+    <h2>
+      <span>🎨 配色方案</span>
+      <div class="category-buttons">
+        <button class="add-btn" onclick="openAddCharacterModal('color')">＋新增</button>
+      </div>
+    </h2>
+    <div class="category-card" id="color-list"></div>
+  </section>
+
+  <!-- 🔹小建議 -->
+  <dialog id="suggestModal" class="modal-box">
+    <h3>💬 小建議 <button onclick="closeModal('suggestModal')">✕</button></h3>
+    <textarea id="suggestText" rows="4" placeholder="請輸入您的建議..." style="width:100%;margin-top:10px;border-radius:8px;border:1px solid #ccc;padding:8px;"></textarea>
+    <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;">
+      <button onclick="submitSuggestion()" style="background:#6f6fe0;color:white;padding:6px 16px;border:none;border-radius:6px;cursor:pointer;">送出</button>
+      <button onclick="closeModal('suggestModal')" style="background:#ccc;color:black;padding:6px 16px;border:none;border-radius:6px;cursor:pointer;">取消</button>
     </div>
-  </div>
+  </dialog>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- 🔹新增角色 -->
+  <dialog id="addCharModal" class="modal-box">
+    <h3>新增角色 <button onclick="closeModal('addCharModal')">✕</button></h3>
+    <input type="text" id="charName" placeholder="角色名稱" style="width:100%;margin-top:10px;border-radius:8px;border:1px solid #ccc;padding:8px;">
+    <textarea id="charPrompt" rows="4" placeholder="角色描述 / Prompt" style="width:100%;margin-top:10px;border-radius:8px;border:1px solid #ccc;padding:8px;"></textarea>
+    <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;">
+      <button onclick="saveCharacter()" style="background:#6f6fe0;color:white;padding:6px 16px;border:none;border-radius:6px;cursor:pointer;">確定</button>
+      <button onclick="closeModal('addCharModal')" style="background:#ccc;color:black;padding:6px 16px;border:none;border-radius:6px;cursor:pointer;">取消</button>
+    </div>
+  </dialog>
 
-  <script>
-    // ⚙️ Firebase 設定（替換成你自己的）
+  <!-- 🔹角色詳情 -->
+  <dialog id="charModal" class="modal-box">
+    <h3 id="charModalTitle">角色名稱 <button onclick="closeModal('charModal')">✕</button></h3>
+    <p id="charModalText" style="margin-top:10px;white-space:pre-wrap;"></p>
+    <button id="copyPromptBtn" onclick="copyPrompt()" style="margin-top:14px;background:#6f6fe0;color:white;padding:6px 16px;border:none;border-radius:6px;cursor:pointer;">📋 複製 Prompt</button>
+  </dialog>
+
+      <script type="module">
+    // =============== Firebase 初始化 ===============
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import { getFirestore, collection, addDoc, deleteDoc, getDocs, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
     const firebaseConfig = {
-      apiKey: "AIzaSyBNMQG8S1qpUwfZ5Zhq26Jo05qitp4BEes",
-      authDomain: "character-prompts.firebaseapp.com",
-      projectId: "character-prompts",
-      storageBucket: "character-prompts.firebasestorage.app",
-      messagingSenderId: "798087154717",
-      appId: "1:798087154717:web:6cbbfb183cba2a05e60af4"
+      apiKey: "你的API_KEY",
+      authDomain: "你的專案ID.firebaseapp.com",
+      projectId: "你的專案ID",
+      storageBucket: "你的專案ID.appspot.com",
+      messagingSenderId: "你的senderID",
+      appId: "你的appID"
     };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
 
-        // === 全域變數 ===
-    let currentUser = null;
-    let allData = {};
-    let currentSection = null; // 用於新增角色時記錄目標分類
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    // === 登入邏輯 ===
-    auth.onAuthStateChanged((user) => {
-      currentUser = user;
-      userBtn.textContent = user ? (user.displayName || user.email) : "登入";
-      dropdown.style.display = user ? "none" : "none"; // 預設隱藏
-      renderAll();
-    });
+    let currentCategory = "";
 
-    // 登入、登出
-    userBtn.onclick = () => {
-      if (!currentUser) {
-        loginModal.classList.add("show");
+    // =============== 登入 / 登出 ===============
+    const loginBtn = document.getElementById("loginBtn");
+    const userMenu = document.getElementById("userMenu");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    loginBtn.addEventListener("click", async () => {
+      if (auth.currentUser) {
+        userMenu.style.display = userMenu.style.display === "block" ? "none" : "block";
       } else {
-        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
-      }
-    };
-
-    document.addEventListener("click", (e) => {
-      if (!userBtn.contains(e.target) && !dropdown.contains(e.target)) {
-        dropdown.style.display = "none";
+        const email = prompt("請輸入信箱：");
+        const password = prompt("請輸入密碼：");
+        if (email && password) {
+          try {
+            await signInWithEmailAndPassword(auth, email, password);
+          } catch (err) {
+            alert("登入失敗：" + err.message);
+          }
+        }
       }
     });
 
-    logoutBtn.onclick = async () => {
-      await auth.signOut();
-      currentUser = null;
-      renderAll();
-    };
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      userMenu.style.display = "none";
+    });
 
-    // 登入方式
-    googleLoginBtn.onclick = async () => {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      await auth.signInWithPopup(provider);
-      loginModal.classList.remove("show");
-    };
-
-    emailLoginBtn.onclick = async () => {
-      const email = emailInput.value.trim();
-      const pass = passwordInput.value.trim();
-      if (!email || !pass) return alert("請輸入信箱與密碼");
-      try {
-        await auth.signInWithEmailAndPassword(email, pass);
-      } catch (err) {
-        if (err.code === "auth/user-not-found") {
-          await auth.createUserWithEmailAndPassword(email, pass);
-          alert("✅ 帳號已建立並登入");
-        } else {
-          alert("登入失敗：" + err.message);
-        }
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        loginBtn.textContent = user.email.split("@")[0];
+        enableEditMode(true);
+      } else {
+        loginBtn.textContent = "登入";
+        enableEditMode(false);
       }
-      loginModal.classList.remove("show");
-    };
-    closeLogin.onclick = () => loginModal.classList.remove("show");
+    });
 
-    // === Firestore 載入資料 ===
-    async function loadData() {
-      try {
-        const doc = await db.collection("prompts").doc("data").get();
-        if (doc.exists) {
-          allData = doc.data().sections || {};
-          localStorage.setItem("promptData", JSON.stringify(allData));
-        } else allData = {};
-      } catch (err) {
-        offlineNotice.style.display = "block";
-        const cache = localStorage.getItem("promptData");
-        allData = cache ? JSON.parse(cache) : {};
-      }
-    }
-
-    // === 排序：角色描述永遠最上 ===
-    function sortSections() {
-      return Object.entries(allData).sort((a, b) => {
-        if (a[0] === "角色描述") return -1;
-        if (b[0] === "角色描述") return 1;
-        return (a[1].createdAt || 0) - (b[1].createdAt || 0);
+    // =============== 編輯模式切換 ===============
+    function enableEditMode(enabled) {
+      document.querySelectorAll(".add-btn, .delete-cat-btn, .delete-char").forEach(btn => {
+        btn.style.display = enabled ? "inline-flex" : "none";
       });
     }
 
-    // === 渲染頁面 ===
-    function renderAll() {
-      mainContent.innerHTML = "";
+    // =============== 顯示對話框 ===============
+    function openAddCharacterModal(category) {
+      currentCategory = category;
+      document.getElementById("charName").value = "";
+      document.getElementById("charPrompt").value = "";
+      document.getElementById("addCharModal").showModal();
+    }
 
-      // 右上角「新增分類」按鈕
-      if (currentUser) {
-        const topBar = document.createElement("div");
-        topBar.style.textAlign = "right";
-        topBar.style.marginBottom = "15px";
-        const addSectionBtn = document.createElement("button");
-        addSectionBtn.textContent = "＋ 新增分類";
-        addSectionBtn.className = "add-btn";
-        addSectionBtn.onclick = () => sectionModal.classList.add("show");
-        topBar.appendChild(addSectionBtn);
-        mainContent.appendChild(topBar);
+    function closeModal(id) {
+      document.getElementById(id).close();
+    }
+
+    // =============== 新增角色到 Firestore ===============
+    async function saveCharacter() {
+      const name = document.getElementById("charName").value.trim();
+      const prompt = document.getElementById("charPrompt").value.trim();
+      if (!name) return alert("請輸入名稱");
+      try {
+        await addDoc(collection(db, currentCategory), { name, prompt });
+        closeModal("addCharModal");
+      } catch (e) {
+        console.error(e);
       }
+    }
 
-      const sorted = sortSections();
-      if (!sorted.length) {
-        mainContent.innerHTML += "<p>目前沒有角色資料</p>";
-        return;
+    // =============== 顯示角色詳情彈窗 ===============
+    function showCharacter(name, prompt) {
+      document.getElementById("charModalTitle").textContent = name;
+      document.getElementById("charModalText").textContent = prompt || "(無描述)";
+      document.getElementById("charModal").showModal();
+    }
+
+    function copyPrompt() {
+      const text = document.getElementById("charModalText").textContent;
+      navigator.clipboard.writeText(text);
+      alert("Prompt 已複製！");
+    }
+
+    // =============== 刪除角色（確認輸入） ===============
+    async function deleteCharacter(category, id, name) {
+      const confirmText = prompt(`確認刪除角色「${name}」？請輸入「刪除」以確認：`);
+      if (confirmText === "刪除") {
+        await deleteDoc(doc(db, category, id));
       }
+    }
 
-      sorted.forEach(([name, section]) => {
-        const sec = document.createElement("div");
-        sec.className = "section";
-
-        const header = document.createElement("h2");
-        header.innerHTML = `${section.icon || "📁"} ${name}`;
-        const actions = document.createElement("div");
-        actions.className = "section-actions";
-
-        if (currentUser) {
-          const addBtn = document.createElement("button");
-          addBtn.textContent = "＋ 新增";
-          addBtn.className = "add-btn";
-          addBtn.onclick = () => {
-            currentSection = name;
-            itemModal.classList.add("show");
+    // =============== Firestore 即時讀取 ===============
+    const categories = ["characters", "style", "outfit", "hair", "color"];
+    categories.forEach(cat => {
+      const listDiv = document.getElementById(`${cat}-list`);
+      onSnapshot(collection(db, cat), snapshot => {
+        listDiv.innerHTML = "";
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const item = document.createElement("div");
+          item.className = "item";
+          item.innerHTML = `
+            ${data.name}
+            <button class="delete-char" onclick="deleteCharacter('${cat}', '${docSnap.id}', '${data.name}')">✕</button>
+          `;
+          item.onclick = (e) => {
+            if (e.target.tagName !== "BUTTON") showCharacter(data.name, data.prompt);
           };
-          actions.appendChild(addBtn);
-
-          const delBtn = document.createElement("button");
-          delBtn.textContent = "刪除分類";
-          delBtn.className = "del-btn";
-          delBtn.onclick = () => {
-            if (confirm(`確定刪除分類「${name}」？`)) {
-              delete allData[name];
-              saveData();
-            }
-          };
-          actions.appendChild(delBtn);
-        }
-
-        header.appendChild(actions);
-        sec.appendChild(header);
-
-        const grid = document.createElement("div");
-        grid.className = "item-grid";
-
-        (section.items || []).forEach((item, index) => {
-          const card = document.createElement("div");
-          card.className = "item-card";
-          card.textContent = item.name;
-          card.onclick = () => showItemModal(item);
-
-          // 🗑️ 角色刪除鈕
-          if (currentUser) {
-            const delIcon = document.createElement("button");
-            delIcon.className = "delete-icon";
-            delIcon.textContent = "🗑️";
-            delIcon.onclick = (e) => {
-              e.stopPropagation();
-              if (confirm(`確定要刪除角色「${item.name}」嗎？`)) {
-                section.items.splice(index, 1);
-                saveData();
-              }
-            };
-            card.appendChild(delIcon);
-          }
-
-          grid.appendChild(card);
+          listDiv.appendChild(item);
         });
-
-        sec.appendChild(grid);
-        mainContent.appendChild(sec);
       });
-    }
+    });
 
-        // === 儲存資料至 Firestore ===
-    async function saveData() {
+    // =============== 小建議 ===============
+    const suggestBtn = document.getElementById("suggestBtn");
+    suggestBtn.addEventListener("click", () => {
+      closeModal("userMenu");
+      document.getElementById("suggestModal").showModal();
+    });
+
+    async function submitSuggestion() {
+      const text = document.getElementById("suggestText").value.trim();
+      if (!text) return alert("請輸入建議內容");
       try {
-        await db.collection("prompts").doc("data").set({ sections: allData });
-        localStorage.setItem("promptData", JSON.stringify(allData));
-        renderAll();
+        await addDoc(collection(db, "suggestions"), { text, time: new Date().toISOString() });
+        alert("感謝您的建議！");
+        document.getElementById("suggestText").value = "";
+        closeModal("suggestModal");
       } catch (err) {
-        alert("❌ 儲存失敗：" + err.message);
+        alert("提交失敗：" + err.message);
       }
     }
 
-    // === 顯示角色詳細內容 ===
-    function showItemModal(item) {
-      const modal = document.createElement("div");
-      Object.assign(modal.style, {
-        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-        background: "rgba(0,0,0,0.4)", display: "flex",
-        alignItems: "center", justifyContent: "center", zIndex: 3000
-      });
-      const box = document.createElement("div");
-      Object.assign(box.style, {
-        background: "rgba(255,255,255,0.95)",
-        backdropFilter: "blur(10px)", borderRadius: "20px",
-        padding: "24px", width: "90%", maxWidth: "600px",
-        boxShadow: "0 8px 25px rgba(0,0,0,0.2)"
-      });
-      box.innerHTML = `<h2>${item.name}</h2>
-        <div style="white-space:pre-wrap;margin:12px 0;">${item.prompt}</div>`;
-      const btn = document.createElement("button");
-      btn.textContent = "📋 複製 Prompt";
-      Object.assign(btn.style, {
-        background: "#5a67d8", color: "white",
-        border: "none", padding: "8px 14px",
-        borderRadius: "8px", cursor: "pointer"
-      });
-      btn.onclick = () => {
-        navigator.clipboard.writeText(item.prompt);
-        btn.textContent = "✅ 已複製！";
-        setTimeout(() => btn.textContent = "📋 複製 Prompt", 1500);
-      };
-      box.appendChild(btn);
-      modal.appendChild(box);
-      modal.onclick = e => { if (e.target === modal) modal.remove(); };
-      document.body.appendChild(modal);
+    // =============== 導覽列定位滾動 ===============
+    function scrollToCategory(id) {
+      document.getElementById(id).scrollIntoView({ behavior: "smooth" });
     }
 
-    // === Modal 開關 ===
-    addSectionCancel.onclick = () => sectionModal.classList.remove("show");
-    addItemCancel.onclick = () => itemModal.classList.remove("show");
-    suggestCancel.onclick = () => suggestModal.classList.remove("show");
-
-    // 新增分類
-    addSectionConfirm.onclick = () => {
-      const name = sectionName.value.trim();
-      const icon = sectionIcon.value.trim() || "📁";
-      if (!name) return alert("請輸入分類名稱");
-      allData[name] = { icon, createdAt: Date.now(), items: [] };
-      sectionModal.classList.remove("show");
-      sectionName.value = "";
-      sectionIcon.value = "";
-      saveData();
-    };
-
-    // 新增角色
-    addItemConfirm.onclick = () => {
-      const name = itemName.value.trim();
-      const prompt = itemPrompt.value.trim();
-      if (!name) return alert("請輸入角色名稱");
-      allData[currentSection].items.push({ name, prompt });
-      itemModal.classList.remove("show");
-      itemName.value = "";
-      itemPrompt.value = "";
-      saveData();
-    };
-
-    // === 小建議送出 ===
-    suggestBtn.onclick = () => suggestModal.classList.add("show");
-
-    suggestConfirm.onclick = async () => {
-      const text = suggestText.value.trim();
-      if (!text) return alert("請輸入內容再送出");
-      try {
-        await db.collection("suggestions").add({
-          suggestion: text,
-          userEmail: currentUser.email,
-          userName: currentUser.displayName || "匿名使用者",
-          timestamp: new Date().toISOString()
-        });
-        alert("✅ 已送出，感謝你的建議！");
-        suggestText.value = "";
-        suggestModal.classList.remove("show");
-      } catch (err) {
-        alert("❌ 無法送出：" + err.message);
-      }
-    };
-
-    // === 初始化 ===
-    (async () => {
-      await loadData();
-      renderAll();
-    })();
+    window.openAddCharacterModal = openAddCharacterModal;
+    window.closeModal = closeModal;
+    window.saveCharacter = saveCharacter;
+    window.showCharacter = showCharacter;
+    window.copyPrompt = copyPrompt;
+    window.deleteCharacter = deleteCharacter;
+    window.scrollToCategory = scrollToCategory;
+    window.submitSuggestion = submitSuggestion;
   </script>
 </body>
 </html>
