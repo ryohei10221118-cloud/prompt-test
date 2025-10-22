@@ -860,6 +860,16 @@ header {
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
   import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyBNMQG8S1qpUwfZ5Zhq26Jo05qitp4BEes",
+    authDomain: "character-prompts.firebaseapp.com",
+    projectId: "character-prompts",
+    storageBucket: "character-prompts.firebasestorage.app",
+    messagingSenderId: "798087154717",
+    appId: "1:798087154717:web:6cbbfb183cba2a05e60af4",
+    measurementId: "G-CXLV8J9ESW"
+  };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -998,10 +1008,6 @@ function showCharacterModal(ch) {
     alert("已複製 Prompt！");
   };
 }
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
 
 // 初始載入
 loadCategories();
