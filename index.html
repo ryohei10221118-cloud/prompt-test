@@ -3,543 +3,726 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>角色提示管理工具 v3.0（雲端共享版）</title>
-
+  <title>角色管理工具</title>
   <style>
-    body {
-      background: #f7f8fc;
-      font-family: "Noto Sans TC", "Segoe UI", sans-serif;
-      color: #333;
-      margin: 0;
-      padding: 0;
+    * {
+      box-sizing: border-box;
+      font-family: 'Noto Sans TC', sans-serif;
     }
 
-    header {
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f3f5fc;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #4a3aff;
+      margin-top: 20px;
+      text-shadow: 0 0 6px rgba(74, 58, 255, 0.2);
+    }
+
+    /* 🔹 導覽列 */
+    .category-nav {
+      display: flex;
+      overflow-x: auto;
+      gap: 10px;
+      padding: 10px;
+      margin: 10px 0;
+      background: transparent;
+      position: relative;
+      width: 90%;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    .category-nav button {
+      background: linear-gradient(135deg, #7a7aff, #a479ff);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: 0.2s;
+    }
+
+    .category-nav button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 8px rgba(100, 80, 255, 0.5);
+    }
+
+    /* 🔹 分類標題區 */
+    .category-section {
+      width: 90%;
+      margin: 30px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    .category-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #4b4ba5;
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 0 0 10px 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 10px;
     }
 
-    header h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-    }
-
-    header .user-info {
-      position: relative;
-    }
-
-    header .user-info button {
-      background: #6f6fe0;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: 0.25s ease;
-    }
-
-    header .user-info button:hover {
-      background: #5a5ad8;
-    }
-
-    /* ======= 下拉選單 ======= */
-    #userMenu {
-      position: absolute;
-      right: 0;
-      top: 40px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      padding: 8px 0;
-      width: 140px;
-      display: none;
-      z-index: 20;
-    }
-
-    #userMenu ul {
-      list-style: none;
-      padding: 0;
+    .category-header h2 {
       margin: 0;
+      color: #4a3aff;
     }
 
-    #userMenu li {
-      padding: 10px 14px;
-      cursor: pointer;
-      color: #333;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-
-    #userMenu li:hover {
-      background: #f1f0ff;
-      color: #4b4ba5;
-    }
-
-    /* ======= 導覽列 ======= */
-    .nav-scroll {
+    .category-actions {
       display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      background: transparent;
-      padding: 10px 16px;
-      white-space: nowrap;
-      border-bottom: 2px solid rgba(108, 99, 255, 0.3);
-      position: sticky;
-      top: 60px;
-      z-index: 10;
+      gap: 8px;
     }
 
-    .nav-scroll::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    .nav-scroll::-webkit-scrollbar-thumb {
-      background: rgba(108, 99, 255, 0.4);
-      border-radius: 10px;
-    }
-
-    .nav-scroll button {
-      background: rgba(108, 99, 255, 0.15);
+    .category-actions button {
       border: none;
-      padding: 6px 14px;
-      border-radius: 10px;
-      font-weight: 600;
-      color: #3a328f;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 6px 10px;
+      color: white;
+      background: #6a5aff;
+      transition: 0.2s;
+    }
+
+    .category-actions button:hover {
+      background: #4a3aff;
+      transform: scale(1.05);
+    }
+
+    /* 🔹 卡片容器 */
+    .character-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+    }
+
+    .character-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      padding: 16px;
+      position: relative;
       cursor: pointer;
       transition: 0.2s;
     }
 
-    .nav-scroll button:hover {
-      background: rgba(108, 99, 255, 0.25);
-      transform: translateY(-2px);
-    }
-
-    /* ======= 分類卡片 ======= */
-    .category {
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-      margin: 24px auto;
-      padding: 18px 24px;
-      width: 90%;
-      max-width: 1000px;
-      transition: all 0.3s ease;
-    }
-
-    .category h2 {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 1.1rem;
-      color: #4b4ba5;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 6px;
-    }
-
-    .category-buttons {
-      display: flex;
-      gap: 10px;
-    }
-
-    .add-btn {
-      background: #6f6fe0;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 6px 12px;
-      cursor: pointer;
-      transition: 0.25s ease;
-      font-weight: 600;
-    }
-
-    .add-btn:hover {
-      background: #5b5bd0;
-    }
-
-    .delete-cat-btn {
-      background: #e74c3c;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 6px 12px;
-      cursor: pointer;
-      transition: 0.25s ease;
-      font-weight: 600;
-    }
-
-    .delete-cat-btn:hover {
-      background: #d03528;
-    }
-
-    /* ======= 角色小卡 ======= */
-    .category-card {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .category-card .item {
-      flex: 1 1 calc(50% - 10px);
-      background: #f9f9ff;
-      border: 1px solid #e0e0ff;
-      border-radius: 12px;
-      padding: 10px 14px;
-      font-weight: 500;
-      position: relative;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      cursor: pointer;
-    }
-
-    .category-card .item:hover {
+    .character-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
 
-    .delete-char {
+    .delete-character {
       position: absolute;
       top: 8px;
       right: 8px;
+      font-size: 18px;
       background: none;
       border: none;
-      color: #e74c3c;
-      font-size: 1.1rem;
       cursor: pointer;
-      transition: transform 0.2s ease;
+      transition: 0.2s;
     }
 
-    .delete-char:hover {
+    .delete-character:hover {
+      color: red;
       transform: scale(1.2);
     }
 
-    /* ======= 彈出視窗 ======= */
-    .modal-box {
-      background: linear-gradient(180deg, #ffffff, #f9f9ff);
-      border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-      padding: 20px 30px;
-      max-width: 460px;
+    /* 🔹 詳情卡 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
-      margin: auto;
-      border-top: 4px solid #6f6fe0;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
     }
 
-    .modal-box h3 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #4b4ba5;
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      width: 90%;
+      max-width: 480px;
+      padding: 20px;
+      position: relative;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-content h3 {
+      color: #4a3aff;
+      margin-top: 0;
+    }
+
+    .modal-content pre {
+      background: #f7f7f7;
+      border-radius: 10px;
+      padding: 10px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      border: none;
+      background: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #777;
+    }
+
+    .close-btn:hover {
+      color: #000;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+        /* 🔹 通用彈窗 */
+    .dialog-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .dialog-box {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      width: 90%;
+      max-width: 400px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .dialog-box h3 {
+      margin-top: 0;
+      color: #4a3aff;
+      text-align: center;
+    }
+
+    .dialog-box input,
+    .dialog-box textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .dialog-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+    }
+
+    .dialog-buttons button {
+      flex: 1;
+      margin: 0 4px;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn-confirm {
+      background: linear-gradient(135deg, #7a7aff, #a479ff);
+      color: white;
+    }
+
+    .btn-cancel {
+      background: #ddd;
+    }
+
+    .btn-confirm:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 6px rgba(100, 80, 255, 0.5);
+    }
+
+    .btn-cancel:hover {
+      background: #ccc;
+    }
+
+    /* 🔹 登入框 */
+    .login-container {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 3000;
+    }
+
+    .login-box {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      padding: 30px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .login-box h2 {
+      color: #4a3aff;
+      margin-top: 0;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 15px;
+    }
+
+    .btn-login {
+      background: linear-gradient(135deg, #7a7aff, #a479ff);
+      color: white;
+    }
+
+    .btn-google {
+      background: #fff;
+      border: 1px solid #ccc;
+    }
+
+    .btn-google:hover {
+      background: #eee;
+    }
+
+    /* 🔹 右上選單與回頂部按鈕 */
+    .top-menu {
+      position: fixed;
+      top: 10px;
+      right: 15px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 10px;
+      z-index: 1200;
     }
 
-    .modal-box h3 button {
-      background: none;
+    .suggestion-button,
+    .logout-button {
       border: none;
-      font-size: 1.2rem;
-      color: #999;
+      background: linear-gradient(135deg, #7a7aff, #a479ff);
+      color: white;
+      border-radius: 20px;
+      padding: 6px 14px;
       cursor: pointer;
-      transition: color 0.2s ease;
+      transition: 0.2s;
+      font-size: 14px;
     }
 
-    .modal-box h3 button:hover {
-      color: #555;
+    .suggestion-button:hover,
+    .logout-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 8px rgba(100, 80, 255, 0.4);
     }
 
-    @media (max-width: 768px) {
-      .category-card .item {
-        flex: 1 1 100%;
-      }
-      .nav-scroll button {
-        font-size: 0.85rem;
-        padding: 5px 10px;
-      }
-      .modal-box {
-        width: 90%;
-        padding: 16px;
-      }
+    #backToTop {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #7a7aff, #a479ff);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 1500;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: 0.3s;
+    }
+
+    #backToTop:hover {
+      transform: scale(1.1);
     }
   </style>
 </head>
+<body>
+  <h1>角色管理工具</h1>
 
-  <body>
-  <header>
-    <h1>角色提示管理工具 v3.0（雲端共享版）</h1>
-    <div class="user-info">
-      <button id="loginBtn">登入</button>
-      <div id="userMenu" class="hidden">
-        <ul>
-          <li id="suggestBtn">💬 小建議</li>
-          <li id="logoutBtn">登出</li>
-        </ul>
-      </div>
-    </div>
-  </header>
-
-  <!-- 🔹導覽列 -->
-  <div class="nav-scroll" id="navBar">
-    <button onclick="scrollToCategory('characters')">角色描述</button>
-    <button onclick="scrollToCategory('style')">光影風格</button>
-    <button onclick="scrollToCategory('outfit')">服裝風格</button>
-    <button onclick="scrollToCategory('hair')">髮型設計</button>
-    <button onclick="scrollToCategory('color')">配色方案</button>
+  <div class="category-nav" id="categoryNav">
+    <button id="addCategoryBtn">＋新增分類</button>
   </div>
 
-  <!-- 🔹角色描述 -->
-  <section id="characters" class="category">
-    <h2>
-      <span>🧍‍♂️ 角色描述</span>
-      <div class="category-buttons">
-        <button class="add-btn" onclick="openAddCharacterModal('characters')">＋新增</button>
-      </div>
-    </h2>
-    <div class="category-card" id="characters-list"></div>
-  </section>
+  <div id="content"></div>
+  <button id="backToTop">⬆</button>
 
-  <!-- 🔹光影風格 -->
-  <section id="style" class="category">
-    <h2>
-      <span>🎨 光影風格</span>
-      <div class="category-buttons">
-        <button class="add-btn" onclick="openAddCharacterModal('style')">＋新增</button>
-      </div>
-    </h2>
-    <div class="category-card" id="style-list"></div>
-  </section>
-
-  <!-- 🔹服裝風格 -->
-  <section id="outfit" class="category">
-    <h2>
-      <span>👗 服裝風格</span>
-      <div class="category-buttons">
-        <button class="add-btn" onclick="openAddCharacterModal('outfit')">＋新增</button>
-      </div>
-    </h2>
-    <div class="category-card" id="outfit-list"></div>
-  </section>
-
-  <!-- 🔹髮型設計 -->
-  <section id="hair" class="category">
-    <h2>
-      <span>💇‍♀️ 髮型設計</span>
-      <div class="category-buttons">
-        <button class="add-btn" onclick="openAddCharacterModal('hair')">＋新增</button>
-      </div>
-    </h2>
-    <div class="category-card" id="hair-list"></div>
-  </section>
-
-  <!-- 🔹配色方案 -->
-  <section id="color" class="category">
-    <h2>
-      <span>🎨 配色方案</span>
-      <div class="category-buttons">
-        <button class="add-btn" onclick="openAddCharacterModal('color')">＋新增</button>
-      </div>
-    </h2>
-    <div class="category-card" id="color-list"></div>
-  </section>
-
-  <!-- 🔹小建議 -->
-  <dialog id="suggestModal" class="modal-box">
-    <h3>💬 小建議 <button onclick="closeModal('suggestModal')">✕</button></h3>
-    <textarea id="suggestText" rows="4" placeholder="請輸入您的建議..." style="width:100%;margin-top:10px;border-radius:8px;border:1px solid #ccc;padding:8px;"></textarea>
-    <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;">
-      <button onclick="submitSuggestion()" style="background:#6f6fe0;color:white;padding:6px 16px;border:none;border-radius:6px;cursor:pointer;">送出</button>
-      <button onclick="closeModal('suggestModal')" style="background:#ccc;color:black;padding:6px 16px;border:none;border-radius:6px;cursor:pointer;">取消</button>
+    <div class="login-container" id="loginContainer">
+    <div class="login-box">
+      <h2>登入角色管理工具</h2>
+      <input type="text" id="usernameInput" placeholder="帳號" />
+      <input type="password" id="passwordInput" placeholder="密碼" />
+      <button class="btn-login" id="loginBtn">帳號登入／註冊</button>
+      <button class="btn-google" id="googleLoginBtn">使用 Google 登入</button>
     </div>
-  </dialog>
+  </div>
 
-  <!-- 🔹新增角色 -->
-  <dialog id="addCharModal" class="modal-box">
-    <h3>新增角色 <button onclick="closeModal('addCharModal')">✕</button></h3>
-    <input type="text" id="charName" placeholder="角色名稱" style="width:100%;margin-top:10px;border-radius:8px;border:1px solid #ccc;padding:8px;">
-    <textarea id="charPrompt" rows="4" placeholder="角色描述 / Prompt" style="width:100%;margin-top:10px;border-radius:8px;border:1px solid #ccc;padding:8px;"></textarea>
-    <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;">
-      <button onclick="saveCharacter()" style="background:#6f6fe0;color:white;padding:6px 16px;border:none;border-radius:6px;cursor:pointer;">確定</button>
-      <button onclick="closeModal('addCharModal')" style="background:#ccc;color:black;padding:6px 16px;border:none;border-radius:6px;cursor:pointer;">取消</button>
+  <!-- 小建議彈窗 -->
+  <div class="dialog-overlay" id="suggestionOverlay">
+    <div class="dialog-box">
+      <h3>小建議</h3>
+      <textarea id="suggestionInput" rows="4" placeholder="輸入您的建議..."></textarea>
+      <div class="dialog-buttons">
+        <button class="btn-confirm" id="submitSuggestion">送出</button>
+        <button class="btn-cancel" id="cancelSuggestion">取消</button>
+      </div>
     </div>
-  </dialog>
+  </div>
 
-  <!-- 🔹角色詳情 -->
-  <dialog id="charModal" class="modal-box">
-    <h3 id="charModalTitle">角色名稱 <button onclick="closeModal('charModal')">✕</button></h3>
-    <p id="charModalText" style="margin-top:10px;white-space:pre-wrap;"></p>
-    <button id="copyPromptBtn" onclick="copyPrompt()" style="margin-top:14px;background:#6f6fe0;color:white;padding:6px 16px;border:none;border-radius:6px;cursor:pointer;">📋 複製 Prompt</button>
-  </dialog>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      addDoc,
+      deleteDoc,
+      doc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged,
+      GoogleAuthProvider,
+      signInWithPopup
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-      <script type="module">
-    // =============== Firebase 初始化 ===============
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-    import { getFirestore, collection, addDoc, deleteDoc, getDocs, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
-
+    // 🔹 你的 Firebase 設定
     const firebaseConfig = {
-      apiKey: "你的API_KEY",
-      authDomain: "你的專案ID.firebaseapp.com",
-      projectId: "你的專案ID",
-      storageBucket: "你的專案ID.appspot.com",
-      messagingSenderId: "你的senderID",
-      appId: "你的appID"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-    let currentCategory = "";
-
-    // =============== 登入 / 登出 ===============
+    const categoryNav = document.getElementById("categoryNav");
+    const content = document.getElementById("content");
+    const addCategoryBtn = document.getElementById("addCategoryBtn");
+    const loginContainer = document.getElementById("loginContainer");
     const loginBtn = document.getElementById("loginBtn");
-    const userMenu = document.getElementById("userMenu");
-    const logoutBtn = document.getElementById("logoutBtn");
+    const googleLoginBtn = document.getElementById("googleLoginBtn");
+    const usernameInput = document.getElementById("usernameInput");
+    const passwordInput = document.getElementById("passwordInput");
 
+    const suggestionOverlay = document.getElementById("suggestionOverlay");
+    const suggestionInput = document.getElementById("suggestionInput");
+    const submitSuggestion = document.getElementById("submitSuggestion");
+    const cancelSuggestion = document.getElementById("cancelSuggestion");
+
+    const backToTop = document.getElementById("backToTop");
+
+    let currentUser = null;
+    let categories = [];
+
+    // 🔹 顯示登入畫面
+    const showLogin = () => {
+      loginContainer.style.display = "flex";
+    };
+
+    // 🔹 登入／註冊按鈕
     loginBtn.addEventListener("click", async () => {
-      if (auth.currentUser) {
-        userMenu.style.display = userMenu.style.display === "block" ? "none" : "block";
-      } else {
-        const email = prompt("請輸入信箱：");
-        const password = prompt("請輸入密碼：");
-        if (email && password) {
-          try {
-            await signInWithEmailAndPassword(auth, email, password);
-          } catch (err) {
-            alert("登入失敗：" + err.message);
-          }
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!username || !password) return alert("請輸入帳號與密碼！");
+      const email = `${username}@prompt.local`; // 自動轉換為合法格式
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        if (error.code === "auth/user-not-found") {
+          await createUserWithEmailAndPassword(auth, email, password);
+        } else {
+          alert("登入失敗：" + error.message);
         }
       }
     });
 
-    logoutBtn.addEventListener("click", async () => {
+    // 🔹 Google 登入
+    googleLoginBtn.addEventListener("click", async () => {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (error) {
+        alert("Google 登入失敗：" + error.message);
+      }
+    });
+
+    // 🔹 登出功能
+    const logout = async () => {
       await signOut(auth);
-      userMenu.style.display = "none";
+    };
+
+    // 🔹 回頂部按鈕
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 300) backToTop.style.display = "block";
+      else backToTop.style.display = "none";
+    });
+    backToTop.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
-    onAuthStateChanged(auth, user => {
+    // 🔹 小建議
+    cancelSuggestion.addEventListener("click", () => {
+      suggestionOverlay.style.display = "none";
+      suggestionInput.value = "";
+    });
+    submitSuggestion.addEventListener("click", async () => {
+      const text = suggestionInput.value.trim();
+      if (!text) return alert("請輸入建議內容！");
+      await addDoc(collection(db, "suggestions"), {
+        suggestion: text,
+        user: currentUser ? currentUser.email : "未登入使用者",
+        timestamp: serverTimestamp()
+      });
+      alert("已送出建議，感謝您的回饋！");
+      suggestionOverlay.style.display = "none";
+      suggestionInput.value = "";
+    });
+
+        // 🔹 登入狀態監聽
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
-        loginBtn.textContent = user.email.split("@")[0];
-        enableEditMode(true);
+        currentUser = user;
+        loginContainer.style.display = "none";
+        renderTopMenu(user);
+        await loadCategories();
       } else {
-        loginBtn.textContent = "登入";
-        enableEditMode(false);
+        currentUser = null;
+        content.innerHTML = "";
+        categoryNav.innerHTML = `<button id="addCategoryBtn">＋新增分類</button>`;
+        addCategoryBtn.addEventListener("click", showAddCategoryDialog);
+        removeTopMenu();
+        showLogin();
       }
     });
 
-    // =============== 編輯模式切換 ===============
-    function enableEditMode(enabled) {
-      document.querySelectorAll(".add-btn, .delete-cat-btn, .delete-char").forEach(btn => {
-        btn.style.display = enabled ? "inline-flex" : "none";
+    // 🔹 導覽列上方選單（小建議／登出）
+    const renderTopMenu = (user) => {
+      removeTopMenu();
+      const topMenu = document.createElement("div");
+      topMenu.className = "top-menu";
+      topMenu.innerHTML = `
+        <span style="color:#555;font-size:14px;">${user.displayName || user.email.split("@")[0]}</span>
+        <button class="suggestion-button" id="suggestionBtn">💬 小建議</button>
+        <button class="logout-button" id="logoutBtn">登出</button>
+      `;
+      document.body.appendChild(topMenu);
+      document.getElementById("suggestionBtn").addEventListener("click", () => {
+        suggestionOverlay.style.display = "flex";
+      });
+      document.getElementById("logoutBtn").addEventListener("click", logout);
+    };
+
+    const removeTopMenu = () => {
+      const old = document.querySelector(".top-menu");
+      if (old) old.remove();
+    };
+
+    // 🔹 載入分類
+    async function loadCategories() {
+      categoryNav.innerHTML = `<button id="addCategoryBtn">＋新增分類</button>`;
+      addCategoryBtn.addEventListener("click", showAddCategoryDialog);
+      const querySnapshot = await getDocs(collection(db, "categories"));
+      categories = [];
+      content.innerHTML = "";
+
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        categories.push({ id: docSnap.id, name: data.name });
+      });
+
+      // 依建立順序排序
+      categories.sort((a, b) => a.name === "角色描述" ? -1 : 1);
+
+      categories.forEach((cat) => {
+        renderCategory(cat);
+        addNavButton(cat.name);
       });
     }
 
-    // =============== 顯示對話框 ===============
-    function openAddCharacterModal(category) {
-      currentCategory = category;
-      document.getElementById("charName").value = "";
-      document.getElementById("charPrompt").value = "";
-      document.getElementById("addCharModal").showModal();
+    // 🔹 導覽列按鈕
+    function addNavButton(name) {
+      const btn = document.createElement("button");
+      btn.textContent = name;
+      btn.addEventListener("click", () => {
+        const section = document.getElementById(name);
+        if (section) section.scrollIntoView({ behavior: "smooth" });
+      });
+      categoryNav.appendChild(btn);
     }
 
-    function closeModal(id) {
-      document.getElementById(id).close();
+    // 🔹 新增分類對話框
+    function showAddCategoryDialog() {
+      const overlay = document.createElement("div");
+      overlay.className = "dialog-overlay";
+      overlay.style.display = "flex";
+      overlay.innerHTML = `
+        <div class="dialog-box">
+          <h3>新增分類</h3>
+          <input id="newCategoryName" placeholder="輸入分類名稱..." />
+          <div class="dialog-buttons">
+            <button class="btn-confirm" id="confirmAddCategory">新增</button>
+            <button class="btn-cancel" id="cancelAddCategory">取消</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+
+      document.getElementById("cancelAddCategory").onclick = () => overlay.remove();
+      document.getElementById("confirmAddCategory").onclick = async () => {
+        const name = document.getElementById("newCategoryName").value.trim();
+        if (!name) return alert("請輸入分類名稱！");
+        await addDoc(collection(db, "categories"), { name });
+        overlay.remove();
+        await loadCategories();
+      };
     }
 
-    // =============== 新增角色到 Firestore ===============
-    async function saveCharacter() {
-      const name = document.getElementById("charName").value.trim();
-      const prompt = document.getElementById("charPrompt").value.trim();
-      if (!name) return alert("請輸入名稱");
-      try {
-        await addDoc(collection(db, currentCategory), { name, prompt });
-        closeModal("addCharModal");
-      } catch (e) {
-        console.error(e);
+    // 🔹 分類顯示
+    function renderCategory(cat) {
+      const section = document.createElement("div");
+      section.className = "category-section";
+      section.id = cat.name;
+      section.innerHTML = `
+        <div class="category-header">
+          <h2>${cat.name}</h2>
+          <div class="category-actions">
+            <button class="add-character">新增</button>
+            <button class="delete-category">🗑️</button>
+          </div>
+        </div>
+        <div class="character-list" id="list-${cat.id}"></div>
+      `;
+      content.appendChild(section);
+
+      section.querySelector(".add-character").addEventListener("click", () =>
+        showAddCharacterDialog(cat.id)
+      );
+      section.querySelector(".delete-category").addEventListener("click", () =>
+        confirmDeleteCategory(cat)
+      );
+    }
+
+    // 🔹 刪除分類
+    async function confirmDeleteCategory(cat) {
+      const input = prompt(`確認刪除分類「${cat.name}」？請輸入「刪除」以確認。`);
+      if (input === "刪除") {
+        await deleteDoc(doc(db, "categories", cat.id));
+        await loadCategories();
       }
     }
 
-    // =============== 顯示角色詳情彈窗 ===============
-    function showCharacter(name, prompt) {
-      document.getElementById("charModalTitle").textContent = name;
-      document.getElementById("charModalText").textContent = prompt || "(無描述)";
-      document.getElementById("charModal").showModal();
-    }
+    // 🔹 新增角色對話框
+    function showAddCharacterDialog(categoryId) {
+      const overlay = document.createElement("div");
+      overlay.className = "dialog-overlay";
+      overlay.style.display = "flex";
+      overlay.innerHTML = `
+        <div class="dialog-box">
+          <h3>新增角色</h3>
+          <input id="characterName" placeholder="角色名稱" />
+          <textarea id="characterPrompt" rows="4" placeholder="角色描述..."></textarea>
+          <div class="dialog-buttons">
+            <button class="btn-confirm" id="confirmAddCharacter">新增</button>
+            <button class="btn-cancel" id="cancelAddCharacter">取消</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
 
-    function copyPrompt() {
-      const text = document.getElementById("charModalText").textContent;
-      navigator.clipboard.writeText(text);
-      alert("Prompt 已複製！");
-    }
-
-    // =============== 刪除角色（確認輸入） ===============
-    async function deleteCharacter(category, id, name) {
-      const confirmText = prompt(`確認刪除角色「${name}」？請輸入「刪除」以確認：`);
-      if (confirmText === "刪除") {
-        await deleteDoc(doc(db, category, id));
-      }
-    }
-
-    // =============== Firestore 即時讀取 ===============
-    const categories = ["characters", "style", "outfit", "hair", "color"];
-    categories.forEach(cat => {
-      const listDiv = document.getElementById(`${cat}-list`);
-      onSnapshot(collection(db, cat), snapshot => {
-        listDiv.innerHTML = "";
-        snapshot.forEach(docSnap => {
-          const data = docSnap.data();
-          const item = document.createElement("div");
-          item.className = "item";
-          item.innerHTML = `
-            ${data.name}
-            <button class="delete-char" onclick="deleteCharacter('${cat}', '${docSnap.id}', '${data.name}')">✕</button>
-          `;
-          item.onclick = (e) => {
-            if (e.target.tagName !== "BUTTON") showCharacter(data.name, data.prompt);
-          };
-          listDiv.appendChild(item);
+      document.getElementById("cancelAddCharacter").onclick = () => overlay.remove();
+      document.getElementById("confirmAddCharacter").onclick = async () => {
+        const name = document.getElementById("characterName").value.trim();
+        const promptText = document.getElementById("characterPrompt").value.trim();
+        if (!name || !promptText) return alert("請輸入角色名稱與描述！");
+        await addDoc(collection(db, `categories/${categoryId}/characters`), {
+          name,
+          prompt: promptText,
+          createdAt: serverTimestamp()
         });
-      });
-    });
-
-    // =============== 小建議 ===============
-    const suggestBtn = document.getElementById("suggestBtn");
-    suggestBtn.addEventListener("click", () => {
-      closeModal("userMenu");
-      document.getElementById("suggestModal").showModal();
-    });
-
-    async function submitSuggestion() {
-      const text = document.getElementById("suggestText").value.trim();
-      if (!text) return alert("請輸入建議內容");
-      try {
-        await addDoc(collection(db, "suggestions"), { text, time: new Date().toISOString() });
-        alert("感謝您的建議！");
-        document.getElementById("suggestText").value = "";
-        closeModal("suggestModal");
-      } catch (err) {
-        alert("提交失敗：" + err.message);
-      }
+        overlay.remove();
+        await loadCategories();
+      };
     }
 
-    // =============== 導覽列定位滾動 ===============
-    function scrollToCategory(id) {
-      document.getElementById(id).scrollIntoView({ behavior: "smooth" });
+    // 🔹 詳情卡顯示
+    function showCharacterModal(name, promptText) {
+      const modal = document.createElement("div");
+      modal.className = "modal";
+      modal.style.display = "flex";
+      modal.innerHTML = `
+        <div class="modal-content">
+          <button class="close-btn">✕</button>
+          <h3>${name}</h3>
+          <pre>${promptText}</pre>
+          <button class="btn-confirm" id="copyPrompt">📋 複製 Prompt</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.querySelector(".close-btn").onclick = () => modal.remove();
+      modal.querySelector("#copyPrompt").onclick = () => {
+        navigator.clipboard.writeText(promptText);
+        alert("已複製 Prompt！");
+      };
     }
-
-    window.openAddCharacterModal = openAddCharacterModal;
-    window.closeModal = closeModal;
-    window.saveCharacter = saveCharacter;
-    window.showCharacter = showCharacter;
-    window.copyPrompt = copyPrompt;
-    window.deleteCharacter = deleteCharacter;
-    window.scrollToCategory = scrollToCategory;
-    window.submitSuggestion = submitSuggestion;
   </script>
 </body>
 </html>
