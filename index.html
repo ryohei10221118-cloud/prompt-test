@@ -29,6 +29,11 @@
     border: 3px solid #667eea;
     transition: all 0.3s;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
   }
   .user-avatar:hover {
     transform: scale(1.1);
@@ -626,12 +631,14 @@
 <body>
 
 <div class="admin-bar">
-  <button class="login-btn-small hidden" id="loginBtn" onclick="googleLogin()">
-    🔐 管理員登入
+  <button class="login-btn-small hidden" id="loginBtn">
+    🔐 登入
   </button>
-  
+
   <div class="hidden" id="userAvatarContainer">
-    <img id="userAvatar" class="user-avatar" src="" alt="User" onclick="toggleUserMenu()">
+    <div id="userAvatar" class="user-avatar" onclick="toggleUserMenu()">
+      <span id="userAvatarText">👤</span>
+    </div>
     <div class="user-menu" id="userMenu">
       <div class="user-menu-header">
         <div class="user-menu-name" id="menuUserName"></div>
@@ -710,6 +717,24 @@
   </div>
 </div>
 
+<div id="loginModal" class="modal" onclick="closeLoginModalOnBackdrop(event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">🔐 登入 / 註冊</h2>
+      <button class="close-btn" onclick="closeLoginModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">請輸入帳號和密碼</p>
+      <input type="text" id="loginAccount" class="edit-input" placeholder="帳號" style="margin-bottom: 10px;" />
+      <input type="password" id="loginPassword" class="edit-input" placeholder="密碼" />
+      <div class="modal-actions">
+        <button class="save-btn" onclick="performLogin()">✓ 登入 / 註冊</button>
+        <button class="cancel-btn" onclick="closeLoginModal()">✕ 取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="suggestionModal" class="modal" onclick="closeSuggestionModalOnBackdrop(event)">
   <div class="modal-content">
     <div class="modal-header">
@@ -729,7 +754,7 @@
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
   import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
   const firebaseConfig = {
@@ -745,12 +770,21 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
 
   let currentUser = null;
   let isEditMode = false;
   let allData = {};
   let selectedEmoji = '📁';
+
+  // 將帳號轉換為 email 格式
+  function accountToEmail(account) {
+    return `${account}@prompt.local`;
+  }
+
+  // 從 email 提取帳號
+  function emailToAccount(email) {
+    return email.replace('@prompt.local', '');
+  }
 
   const commonEmojis = [
     '👤', '🎭', '🎨', '🌟', '✨', '💫', '🔮', '🎪',
@@ -815,9 +849,11 @@
     if (currentUser) {
       loginBtn.classList.add('hidden');
       avatarContainer.classList.remove('hidden');
-      document.getElementById('userAvatar').src = currentUser.photoURL || '';
-      document.getElementById('menuUserName').textContent = currentUser.displayName || '';
-      document.getElementById('menuUserEmail').textContent = currentUser.email || '';
+
+      const account = emailToAccount(currentUser.email);
+      document.getElementById('userAvatarText').textContent = account.charAt(0).toUpperCase();
+      document.getElementById('menuUserName').textContent = account;
+      document.getElementById('menuUserEmail').textContent = '帳號 ID';
     } else {
       loginBtn.classList.remove('hidden');
       avatarContainer.classList.add('hidden');
@@ -828,13 +864,59 @@
     }
   }
 
-  // Google 登入
-  window.googleLogin = async function() {
+  // 開啟登入 Modal
+  document.getElementById('loginBtn').addEventListener('click', () => {
+    document.getElementById('loginAccount').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginModal').classList.add('show');
+  });
+
+  // 關閉登入 Modal
+  window.closeLoginModal = function() {
+    document.getElementById('loginModal').classList.remove('show');
+  };
+
+  // 點擊背景關閉登入 Modal
+  window.closeLoginModalOnBackdrop = function(event) {
+    if (event.target === document.getElementById('loginModal')) {
+      closeLoginModal();
+    }
+  };
+
+  // 執行登入
+  window.performLogin = async function() {
+    const account = document.getElementById('loginAccount').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    if (!account || !password) {
+      alert('請輸入帳號和密碼');
+      return;
+    }
+
+    const email = accountToEmail(account);
+
     try {
-      await signInWithPopup(auth, provider);
+      // 先嘗試登入
+      await signInWithEmailAndPassword(auth, email, password);
+      alert('登入成功！');
+      closeLoginModal();
     } catch (error) {
-      console.error('Login error:', error);
-      alert('登入失敗，請重試');
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        // 如果用戶不存在，嘗試註冊
+        try {
+          await createUserWithEmailAndPassword(auth, email, password);
+          alert('註冊成功並已登入！');
+          closeLoginModal();
+        } catch (registerError) {
+          console.error('Register error:', registerError);
+          alert('註冊失敗：' + registerError.message);
+        }
+      } else if (error.code === 'auth/wrong-password') {
+        alert('密碼錯誤，請重試');
+      } else {
+        console.error('Login error:', error);
+        alert('登入失敗：' + error.message);
+      }
     }
   };
 
@@ -843,6 +925,7 @@
     try {
       await signOut(auth);
       closeUserMenu();
+      alert('已登出');
     } catch (error) {
       console.error('Logout error:', error);
       alert('登出失敗，請重試');
