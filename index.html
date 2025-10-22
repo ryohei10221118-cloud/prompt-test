@@ -1098,6 +1098,11 @@
 
   // 儲存項目
   window.saveItem = async function(sectionName, itemIndex) {
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
     const textarea = document.getElementById(`textarea-${sectionName}-${itemIndex}`);
     const pixaiTextarea = document.getElementById(`pixai-${sectionName}-${itemIndex}`);
 
@@ -1156,6 +1161,11 @@
 
   // 新增項目
   window.addNewItem = async function(sectionName) {
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
     const name = prompt('請輸入項目名稱：');
     if (!name) return;
 
@@ -1221,6 +1231,11 @@
 
   // 確認新增分類
   window.confirmAddCategory = async function() {
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
     const name = document.getElementById('newCategoryName').value.trim();
 
     if (!name) {
