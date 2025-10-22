@@ -790,33 +790,60 @@ header {
   </div>
 </div>
 
-<!-- 類別容器 -->
-<div id="categoriesContainer"></div>
+<div class="container">
+  <div class="loading" id="loadingIndicator">載入中...</div>
+  <div class="error-message hidden" id="errorMessage">
+    ⚠️ 無法連接到 Firebase，正在使用離線模式。
+  </div>
 
-<!-- 小建議按鈕 -->
-<button id="suggestionBtn" title="提出小建議">💡</button>
+  <div id="contentArea" class="hidden">
+    <h1>🎭 Prompt 管理系統</h1>
 
-<!-- 回到最上方 -->
-<button id="scrollTopBtn" title="回到最上方">↑</button>
+    <div class="nav-buttons" id="navButtons"></div>
 
-<!-- 登入視窗 -->
-<div id="loginModal" class="modal">
-  <div class="modal-content">
-    <span class="close-btn" onclick="closeLogin()">×</span>
-    <h3>登入或註冊帳號</h3>
-    <input type="text" id="loginAccount" placeholder="帳號" />
-    <input type="password" id="loginPassword" placeholder="密碼" />
-    <button onclick="loginOrRegister()">登入 / 註冊</button>
+    <div id="sectionsContainer"></div>
+
+    <button class="back-to-top" id="backToTop" onclick="scrollToTop()">↑</button>
   </div>
 </div>
 
-<!-- 小建議視窗 -->
-<div id="suggestionModal" class="modal">
+<div id="itemModal" class="modal" onclick="closeModalOnBackdrop(event)">
   <div class="modal-content">
-    <span class="close-btn" onclick="closeSuggestion()">×</span>
-    <h3>提出小建議</h3>
-    <textarea id="suggestionText" rows="5" placeholder="輸入你的建議..."></textarea>
-    <button onclick="submitSuggestion()">送出</button>
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle"></h2>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div id="addCategoryModal" class="modal" onclick="closeAddCategoryModalOnBackdrop(event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">➕ 新增分類</h2>
+      <button class="close-btn" onclick="closeAddCategoryModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="category-input-group">
+        <label class="category-input-label">分類名稱</label>
+        <input type="text" id="newCategoryName" class="edit-input" placeholder="例如: 場景、道具、特效..." />
+      </div>
+      <div class="category-input-group">
+        <label class="category-input-label optional">選擇圖示</label>
+        <div class="emoji-input-wrapper">
+          <input type="text" id="emojiInput" class="emoji-input" placeholder="輸入或選擇 emoji" maxlength="2" oninput="updateEmojiFromInput()" />
+          <div class="emoji-preview" id="emojiPreview">📁</div>
+        </div>
+        <div class="emoji-picker-container">
+          <button class="emoji-picker-toggle" onclick="toggleEmojiPicker()">📋 顯示常用圖示</button>
+          <div class="emoji-picker" id="emojiPicker"></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="save-btn" onclick="confirmAddCategory()">✓ 確定</button>
+        <button class="cancel-btn" onclick="closeAddCategoryModal()">✕ 取消</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -858,7 +885,7 @@ header {
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-  import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { getFirestore, doc, getDoc, setDoc, collection, addDoc, query, orderBy, getDocs, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyBNMQG8S1qpUwfZ5Zhq26Jo05qitp4BEes",
@@ -870,147 +897,14 @@ header {
     measurementId: "G-CXLV8J9ESW"
   };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-// --- 登入 / 登出 ---
-const loginBtn = document.getElementById("loginBtn");
-const loginModal = document.getElementById("loginModal");
-let currentUser = null;
-
-loginBtn.addEventListener("click", () => {
-  if (currentUser) {
-    signOut(auth).then(() => {
-      currentUser = null;
-      alert("已登出！");
-      loginBtn.textContent = "登入 / 登出";
-    });
-  } else {
-    loginModal.style.display = "flex";
-  }
-});
-
-async function loginOrRegister() {
-  const account = document.getElementById("loginAccount").value;
-  const password = document.getElementById("loginPassword").value;
-  try {
-    await signInWithEmailAndPassword(auth, account, password);
-  } catch (error) {
-    await createUserWithEmailAndPassword(auth, account, password);
-  }
-  closeLogin();
-}
-
-function closeLogin() {
-  loginModal.style.display = "none";
-}
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    currentUser = user;
-    loginBtn.textContent = "登出";
-  } else {
-    currentUser = null;
-    loginBtn.textContent = "登入 / 登出";
-  }
-});
-
-// --- 小建議 ---
-const suggestionModal = document.getElementById("suggestionModal");
-document.getElementById("suggestionBtn").onclick = () => {
-  suggestionModal.style.display = "flex";
-};
-function closeSuggestion() {
-  suggestionModal.style.display = "none";
-}
-async function submitSuggestion() {
-  const text = document.getElementById("suggestionText").value.trim();
-  if (!text) return alert("請輸入內容！");
-  try {
-    await addDoc(collection(db, "suggestions"), {
-      text,
-      user: currentUser ? currentUser.email : "訪客",
-      time: new Date()
-    });
-    alert("感謝你的建議！");
-    document.getElementById("suggestionText").value = "";
-    closeSuggestion();
-  } catch (e) {
-    console.error("Error adding document: ", e);
-  }
-}
-
-// --- 回到最上方按鈕 ---
-const scrollBtn = document.getElementById("scrollTopBtn");
-window.addEventListener("scroll", () => {
-  scrollBtn.style.display = window.scrollY > 200 ? "block" : "none";
-});
-scrollBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
-
-  // --- 角色詳情視窗 ---
-const categoriesContainer = document.getElementById("categoriesContainer");
-
-// 建立角色顯示
-async function loadCategories() {
-  const q = query(collection(db, "categories"), orderBy("createdAt", "desc"));
-  const querySnapshot = await getDocs(q);
-  categoriesContainer.innerHTML = "";
-  querySnapshot.forEach((docSnap) => {
-    const categoryData = docSnap.data();
-    const categoryDiv = document.createElement("div");
-    categoryDiv.className = "category";
-
-    // 類別標題
-    const header = document.createElement("div");
-    header.className = "category-header";
-    header.innerHTML = `
-      <span>${categoryData.name}</span>
-      ${currentUser ? `<button onclick="deleteCategory('${docSnap.id}')">🗑️ 刪除</button>` : ""}
-    `;
-    categoryDiv.appendChild(header);
-
-    // 角色卡片群
-    const cardsDiv = document.createElement("div");
-    cardsDiv.className = "cards";
-    if (categoryData.characters) {
-      categoryData.characters.forEach((ch) => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `<div class="card-title">${ch.name}</div><div class="card-desc">${ch.short}</div>`;
-        card.onclick = () => showCharacterModal(ch);
-        cardsDiv.appendChild(card);
-      });
-    }
-    categoryDiv.appendChild(cardsDiv);
-    categoriesContainer.appendChild(categoryDiv);
-  });
-}
-
-// 顯示角色詳情
-function showCharacterModal(ch) {
-  const modal = document.createElement("div");
-  modal.className = "modal";
-  modal.style.display = "flex";
-
-  modal.innerHTML = `
-    <div class="modal-content">
-      <span class="close-btn" onclick="this.closest('.modal').remove()">×</span>
-      <h3>${ch.name}</h3>
-      <div style="background:#f2f2ff; padding:10px; border-radius:10px; margin:10px 0;">${ch.full}</div>
-      <button id="copyPromptBtn">📋 複製 Prompt</button>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-  modal.querySelector("#copyPromptBtn").onclick = () => {
-    navigator.clipboard.writeText(ch.full);
-    alert("已複製 Prompt！");
-  };
-}
-
-// 初始載入
-loadCategories();
+  let currentUser = null;
+  let isEditMode = false;
+  let allData = {};
+  let selectedEmoji = '📁';
 
   // 將帳號轉換為 email 格式
   function accountToEmail(account) {
