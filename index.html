@@ -1,437 +1,551 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>角色管理工具</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>角色分類管理工具</title>
 
-  <style>
-    body {
-      font-family: "Microsoft JhengHei", sans-serif;
-      background: #f5f5f5;
-      margin: 0;
-      padding: 0;
-      color: #2f2f5f;
-    }
+<style>
+:root {
+  --primary: linear-gradient(135deg, #7b5cff, #6a9cff);
+  --bg-color: #f4f5ff;
+  --card-bg: #ffffff;
+  --accent: #806cff;
+  --shadow: rgba(0, 0, 0, 0.15);
+  --gray-text: #555;
+}
 
-    header {
-      background: transparent;
-      text-align: center;
-      padding: 20px;
-      font-size: 24px;
-      font-weight: bold;
-      color: #2f2f9f;
-    }
+/* 頁面整體設定 */
+body {
+  margin: 0;
+  font-family: "Noto Sans TC", sans-serif;
+  background: var(--bg-color);
+  color: #222;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-    .nav-bar {
-      display: flex;
-      overflow-x: auto;
-      gap: 8px;
-      padding: 10px;
-      position: relative;
-      justify-content: center;
-    }
+/* 頁首 */
+header {
+  width: 100%;
+  text-align: center;
+  background: var(--primary);
+  color: white;
+  padding: 18px 10px;
+  font-size: clamp(1.3em, 2.5vw, 1.8em);
+  font-weight: bold;
+  letter-spacing: 1px;
+  box-shadow: 0 3px 10px var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
 
-    .nav-bar button {
-      background: #7d6bff;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      padding: 8px 14px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: 0.2s;
-    }
+/* 導覽列 */
+.navbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  justify-content: center;
+  background: rgba(255,255,255,0.45);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 6px var(--shadow);
+  width: 100%;
+}
+.navbar button {
+  flex: 0 1 auto;
+  border: none;
+  background: var(--accent);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.navbar button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
 
-    .nav-bar button:hover {
-      background: #5b4be0;
-    }
+/* 分類容器 */
+.category {
+  width: 95%;
+  max-width: 1000px;
+  background: var(--card-bg);
+  margin: 18px auto;
+  border-radius: 16px;
+  box-shadow: 0 3px 10px var(--shadow);
+  padding: 16px;
+}
 
-    .category {
-      background: white;
-      margin: 25px auto;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      width: 90%;
-      max-width: 900px;
-    }
+/* 分類標題 */
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: var(--accent);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.category-header button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+.category-header button:hover {
+  opacity: 0.9;
+}
 
-    .category-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
+/* 卡片區塊 */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.card {
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 3px 6px var(--shadow);
+  padding: 14px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px var(--shadow);
+}
+.card-title {
+  font-weight: bold;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.card-desc {
+  font-size: 0.95em;
+  color: var(--gray-text);
+  background: #f6f6ff;
+  padding: 8px 10px;
+  border-radius: 10px;
+  min-height: 50px;
+}
 
-    .category-header h2 {
-      margin: 0;
-      color: #2f2f5f;
-    }
+/* 彈窗通用 */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.45);
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+.modal-content {
+  background: white;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px var(--shadow);
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  position: relative;
+}
+.modal-content h3 {
+  margin-top: 0;
+  color: var(--accent);
+}
+.modal-content input, .modal-content textarea {
+  width: 90%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 1em;
+}
+.modal-content button {
+  margin-top: 15px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: #888;
+}
+.close-btn:hover { color: #000; }
 
-    .character-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 15px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-      margin-bottom: 12px;
-      transition: transform 0.2s ease;
-    }
+/* 小建議按鈕 */
+#suggestionBtn {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 55px;
+  height: 55px;
+  box-shadow: 0 4px 10px var(--shadow);
+  font-size: 1.3em;
+  cursor: pointer;
+  z-index: 150;
+  transition: 0.3s;
+}
+#suggestionBtn:hover { transform: scale(1.05); }
 
-    .character-card:hover {
-      transform: scale(1.01);
-    }
+/* 回頂按鈕 */
+#scrollTopBtn {
+  position: fixed;
+  bottom: 90px;
+  right: 30px;
+  background: #6a9cff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  font-size: 1.1em;
+  cursor: pointer;
+  display: none;
+  box-shadow: 0 4px 10px var(--shadow);
+  transition: 0.3s;
+  z-index: 150;
+}
+#scrollTopBtn:hover { transform: scale(1.1); }
 
-    .character-card p {
-      background: #f0f0f0;
-      border-radius: 10px;
-      padding: 10px;
-      margin: 8px 0;
-      color: #333;
-    }
+/* 登入窗 */
+#loginModal .modal-content {
+  max-width: 360px;
+}
+#loginModal input {
+  width: 100%;
+  margin-bottom: 10px;
+}
+#loginModal button {
+  width: 100%;
+  margin-top: 10px;
+}
 
-    .copy-btn {
-      background: #5b4be0;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 6px 12px;
-      cursor: pointer;
-    }
+/* 手機適應 */
+@media (max-width: 600px) {
+  header { font-size: 1.5em; padding: 15px 8px; }
+  .category { padding: 14px; }
+  .navbar button { padding: 6px 10px; font-size: 0.9em; }
+  .modal-content { width: 92%; padding: 20px; }
+}
+</style>
 
-    .copy-btn:hover {
-      background: #3e34b8;
-    }
-
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.4);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 100;
-    }
-
-    .modal-content {
-      background: #fff;
-      border-radius: 16px;
-      padding: 20px 30px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-    }
-
-    .modal-content h3 {
-      margin-top: 0;
-      color: #2f2f8f;
-    }
-
-    .modal-content input,
-    .modal-content textarea {
-      width: 90%;
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      outline: none;
-      font-size: 14px;
-    }
-
-    .modal-buttons {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 10px;
-    }
-
-    .btn-primary {
-      background: #7d6bff;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 8px 16px;
-      cursor: pointer;
-    }
-
-    .btn-secondary {
-      background: #ccc;
-      border: none;
-      border-radius: 10px;
-      padding: 8px 16px;
-      cursor: pointer;
-    }
-
-    .delete-char {
-      float: right;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      font-size: 18px;
-      margin-top: -10px;
-      color: #e74c3c;
-    }
-
-    .delete-char:hover {
-      transform: scale(1.2);
-    }
-  </style>
-</head>
-
+  </head>
 <body>
-  <header>
-    <div>角色管理工具</div>
-    <button id="loginBtn">登入</button>
-  </header>
 
-  <div class="nav-bar" id="navBar"></div>
-  <div id="categoriesContainer"></div>
+<header>角色管理工具</header>
 
-  <!-- 全功能腳本 -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+<!-- 導覽列 -->
+<div class="navbar">
+  <button id="loginBtn">登入 / 登出</button>
+  <button id="addCategoryBtn">＋ 新增分類</button>
+</div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBNMQG8S1qpUwfZ5Zhq26Jo05qitp4BEes",
-      authDomain: "AIzaSyBNMQG8S1qpUwfZ5Zhq26Jo05qitp4BEes",
-      projectId: "character-prompts",
-      storageBucket: "character-prompts.firebasestorage.app",
-      messagingSenderId: "798087154717",
-      appId: "1:798087154717:web:6cbbfb183cba2a05e60af4"
-    };
+<!-- 類別容器 -->
+<div id="categoriesContainer"></div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
+<!-- 小建議按鈕 -->
+<button id="suggestionBtn" title="提出小建議">💡</button>
 
-    const loginBtn = document.getElementById("loginBtn");
-    const navBar = document.getElementById("navBar");
-    const categoriesContainer = document.getElementById("categoriesContainer");
-    let currentUser = null;
-    let categories = [];
+<!-- 回到最上方 -->
+<button id="scrollTopBtn" title="回到最上方">↑</button>
 
-    function showLoginDialog() {
-      const modal = document.createElement("div");
-      modal.className = "modal";
-      modal.innerHTML = `
-        <div class="modal-content">
-          <h3>登入或註冊帳號</h3>
-          <input type="text" id="account" placeholder="帳號（自訂名稱）" />
-          <input type="password" id="password" placeholder="密碼" />
-          <div class="modal-buttons">
-            <button id="loginConfirm" class="btn-primary">登入</button>
-            <button id="registerBtn" class="btn-secondary">註冊</button>
-          </div>
-          <hr>
-          <button id="googleLogin" class="btn-primary">使用 Google 登入</button>
-        </div>
-      `;
-      document.body.appendChild(modal);
+<!-- 登入視窗 -->
+<div id="loginModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeLogin()">×</span>
+    <h3>登入或註冊帳號</h3>
+    <input type="text" id="loginAccount" placeholder="帳號" />
+    <input type="password" id="loginPassword" placeholder="密碼" />
+    <button onclick="loginOrRegister()">登入 / 註冊</button>
+  </div>
+</div>
 
-      modal.querySelector("#loginConfirm").onclick = async () => {
-        const account = document.getElementById("account").value.trim();
-        const password = document.getElementById("password").value.trim();
-        if (!account || !password) return alert("請輸入帳號與密碼！");
-        try {
-          const email = `${account}@prompt.local`;
-          await signInWithEmailAndPassword(auth, email, password);
-          modal.remove();
-        } catch (e) {
-          alert("登入失敗：" + e.message);
-        }
-      };
+<!-- 小建議視窗 -->
+<div id="suggestionModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeSuggestion()">×</span>
+    <h3>提出小建議</h3>
+    <textarea id="suggestionText" rows="5" placeholder="輸入你的建議..."></textarea>
+    <button onclick="submitSuggestion()">送出</button>
+  </div>
+</div>
 
-      modal.querySelector("#registerBtn").onclick = async () => {
-        const account = document.getElementById("account").value.trim();
-        const password = document.getElementById("password").value.trim();
-        if (!account || !password) return alert("請輸入帳號與密碼！");
-        try {
-          const email = `${account}@prompt.local`;
-          await createUserWithEmailAndPassword(auth, email, password);
-          modal.remove();
-        } catch (e) {
-          alert("註冊失敗：" + e.message);
-        }
-      };
+<script>
+// --- Firebase 初始化 ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-      modal.querySelector("#googleLogin").onclick = async () => {
-        try {
-          await signInWithPopup(auth, provider);
-          modal.remove();
-        } catch (e) {
-          alert("Google 登入失敗：" + e.message);
-        }
-      };
-    }
+const firebaseConfig = {
+  apiKey: "你的APIKEY",
+  authDomain: "你的專案.firebaseapp.com",
+  projectId: "你的專案ID",
+  storageBucket: "你的專案.appspot.com",
+  messagingSenderId: "你的senderId",
+  appId: "你的appId"
+};
 
-    loginBtn.onclick = showLoginDialog;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-    onAuthStateChanged(auth, async (user) => {
-      currentUser = user;
-      if (user) {
-        loginBtn.textContent = "登出";
-        loginBtn.onclick = async () => {
-          await signOut(auth);
-          loginBtn.textContent = "登入";
-          loginBtn.onclick = showLoginDialog;
-        };
-      } else {
-        loginBtn.textContent = "登入";
-        loginBtn.onclick = showLoginDialog;
-      }
-      await loadCategories(user);
+// --- 登入 / 登出 ---
+const loginBtn = document.getElementById("loginBtn");
+const loginModal = document.getElementById("loginModal");
+let currentUser = null;
+
+loginBtn.addEventListener("click", () => {
+  if (currentUser) {
+    signOut(auth).then(() => {
+      currentUser = null;
+      alert("已登出！");
+      loginBtn.textContent = "登入 / 登出";
     });
+  } else {
+    loginModal.style.display = "flex";
+  }
+});
 
-    async function loadCategories(user) {
-      categoriesContainer.innerHTML = "";
-      navBar.innerHTML = "";
-      const snapshot = await getDocs(collection(db, "categories"));
-      categories = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        categories.push({ id: docSnap.id, name: data.name });
-      });
+async function loginOrRegister() {
+  const account = document.getElementById("loginAccount").value;
+  const password = document.getElementById("loginPassword").value;
+  try {
+    await signInWithEmailAndPassword(auth, account, password);
+  } catch (error) {
+    await createUserWithEmailAndPassword(auth, account, password);
+  }
+  closeLogin();
+}
 
-      if (user) {
-        const addBtn = document.createElement("button");
-        addBtn.textContent = "＋新增分類";
-        addBtn.onclick = showAddCategoryDialog;
-        navBar.appendChild(addBtn);
-      }
+function closeLogin() {
+  loginModal.style.display = "none";
+}
 
-      categories.forEach((cat) => {
-        const btn = document.createElement("button");
-        btn.textContent = cat.name;
-        btn.onclick = () => {
-          document.getElementById(cat.id)?.scrollIntoView({ behavior: "smooth" });
-        };
-        navBar.appendChild(btn);
-      });
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    loginBtn.textContent = "登出";
+  } else {
+    currentUser = null;
+    loginBtn.textContent = "登入 / 登出";
+  }
+});
 
-      categories.forEach((cat) => renderCategory(cat, user));
-    }
+// --- 小建議 ---
+const suggestionModal = document.getElementById("suggestionModal");
+document.getElementById("suggestionBtn").onclick = () => {
+  suggestionModal.style.display = "flex";
+};
+function closeSuggestion() {
+  suggestionModal.style.display = "none";
+}
+async function submitSuggestion() {
+  const text = document.getElementById("suggestionText").value.trim();
+  if (!text) return alert("請輸入內容！");
+  try {
+    await addDoc(collection(db, "suggestions"), {
+      text,
+      user: currentUser ? currentUser.email : "訪客",
+      time: new Date()
+    });
+    alert("感謝你的建議！");
+    document.getElementById("suggestionText").value = "";
+    closeSuggestion();
+  } catch (e) {
+    console.error("Error adding document: ", e);
+  }
+}
 
-    function renderCategory(cat, user) {
-      const section = document.createElement("div");
-      section.className = "category";
-      section.id = cat.id;
-      section.innerHTML = `
-        <div class="category-header">
-          <h2>${cat.name}</h2>
-          <div class="category-actions"></div>
-        </div>
-        <div class="character-list"></div>
-      `;
-      const actions = section.querySelector(".category-actions");
-      if (user) {
-        const add = document.createElement("button");
-        add.textContent = "新增";
-        add.onclick = () => showAddCharacterDialog(cat.id);
-        const del = document.createElement("button");
-        del.textContent = "🗑️";
-        del.onclick = () => confirmDeleteCategory(cat);
-        actions.append(add, del);
-      }
-      categoriesContainer.appendChild(section);
-      loadCharacters(cat.id, section.querySelector(".character-list"), user);
-    }
+// --- 回到最上方按鈕 ---
+const scrollBtn = document.getElementById("scrollTopBtn");
+window.addEventListener("scroll", () => {
+  scrollBtn.style.display = window.scrollY > 200 ? "block" : "none";
+});
+scrollBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-    async function loadCharacters(categoryId, container, user) {
-      container.innerHTML = "";
-      const charSnap = await getDocs(collection(db, `categories/${categoryId}/characters`));
-      charSnap.forEach((c) => {
-        const data = c.data();
+  // --- 角色詳情視窗 ---
+const categoriesContainer = document.getElementById("categoriesContainer");
+
+// 建立角色顯示
+async function loadCategories() {
+  const q = query(collection(db, "categories"), orderBy("createdAt", "desc"));
+  const querySnapshot = await getDocs(q);
+  categoriesContainer.innerHTML = "";
+  querySnapshot.forEach((docSnap) => {
+    const categoryData = docSnap.data();
+    const categoryDiv = document.createElement("div");
+    categoryDiv.className = "category";
+
+    // 類別標題
+    const header = document.createElement("div");
+    header.className = "category-header";
+    header.innerHTML = `
+      <span>${categoryData.name}</span>
+      ${currentUser ? `<button onclick="deleteCategory('${docSnap.id}')">🗑️ 刪除</button>` : ""}
+    `;
+    categoryDiv.appendChild(header);
+
+    // 角色卡片群
+    const cardsDiv = document.createElement("div");
+    cardsDiv.className = "cards";
+    if (categoryData.characters) {
+      categoryData.characters.forEach((ch) => {
         const card = document.createElement("div");
-        card.className = "character-card";
-        card.innerHTML = `
-          <h3>${data.name}</h3>
-          <p>${data.prompt}</p>
-          <button class="copy-btn">📋 複製 Prompt</button>
-        `;
-        card.querySelector(".copy-btn").onclick = () => {
-          navigator.clipboard.writeText(data.prompt);
-          alert("已複製 Prompt！");
-        };
-        if (user) {
-          const del = document.createElement("button");
-          del.className = "delete-char";
-          del.textContent = "🗑️";
-          del.onclick = async () => {
-            const confirmTxt = prompt(`確定刪除角色「${data.name}」？請輸入「刪除」以確認`);
-            if (confirmTxt === "刪除") {
-              await deleteDoc(doc(db, `categories/${categoryId}/characters`, c.id));
-              loadCharacters(categoryId, container, user);
-            }
-          };
-          card.appendChild(del);
-        }
-        container.appendChild(card);
+        card.className = "card";
+        card.innerHTML = `<div class="card-title">${ch.name}</div><div class="card-desc">${ch.short}</div>`;
+        card.onclick = () => showCharacterModal(ch);
+        cardsDiv.appendChild(card);
       });
     }
+    categoryDiv.appendChild(cardsDiv);
+    categoriesContainer.appendChild(categoryDiv);
+  });
+}
 
-    function showAddCategoryDialog() {
-      const modal = document.createElement("div");
-      modal.className = "modal";
-      modal.innerHTML = `
-        <div class="modal-content">
-          <h3>新增分類</h3>
-          <input id="newCategoryName" placeholder="請輸入分類名稱">
-          <div class="modal-buttons">
-            <button class="btn-primary" id="confirmAdd">新增</button>
-            <button class="btn-secondary" id="cancelAdd">取消</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      modal.querySelector("#cancelAdd").onclick = () => modal.remove();
-      modal.querySelector("#confirmAdd").onclick = async () => {
-        const name = document.getElementById("newCategoryName").value.trim();
-        if (!name) return alert("請輸入名稱！");
-        await setDoc(doc(collection(db, "categories")), { name });
-        modal.remove();
-        loadCategories(currentUser);
-      };
-    }
+// 顯示角色詳情
+function showCharacterModal(ch) {
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.style.display = "flex";
 
-    function showAddCharacterDialog(categoryId) {
-      const modal = document.createElement("div");
-      modal.className = "modal";
-      modal.innerHTML = `
-        <div class="modal-content">
-          <h3>新增角色</h3>
-          <input id="newCharacterName" placeholder="角色名稱">
-          <textarea id="newCharacterPrompt" placeholder="角色描述"></textarea>
-          <div class="modal-buttons">
-            <button class="btn-primary" id="confirmAddChar">新增</button>
-            <button class="btn-secondary" id="cancelChar">取消</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      modal.querySelector("#cancelChar").onclick = () => modal.remove();
-      modal.querySelector("#confirmAddChar").onclick = async () => {
-        const name = document.getElementById("newCharacterName").value.trim();
-        const prompt = document.getElementById("newCharacterPrompt").value.trim();
-        if (!name || !prompt) return alert("請完整輸入角色資料！");
-        await addDoc(collection(db, `categories/${categoryId}/characters`), { name, prompt });
-        modal.remove();
-        loadCharacters(categoryId, document.querySelector(`#${categoryId} .character-list`), currentUser);
-      };
-    }
+  modal.innerHTML = `
+    <div class="modal-content">
+      <span class="close-btn" onclick="this.closest('.modal').remove()">×</span>
+      <h3>${ch.name}</h3>
+      <div style="background:#f2f2ff; padding:10px; border-radius:10px; margin:10px 0;">${ch.full}</div>
+      <button id="copyPromptBtn">📋 複製 Prompt</button>
+    </div>
+  `;
 
-    async function confirmDeleteCategory(cat) {
-      const input = prompt(`確定刪除分類「${cat.name}」？請輸入「刪除」以確認`);
-      if (input === "刪除") {
-        await deleteDoc(doc(db, "categories", cat.id));
-        loadCategories(currentUser);
-      }
+  document.body.appendChild(modal);
+  modal.querySelector("#copyPromptBtn").onclick = () => {
+    navigator.clipboard.writeText(ch.full);
+    alert("已複製 Prompt！");
+  };
+}
+
+// 刪除分類（需輸入確認）
+async function deleteCategory(id) {
+  const input = prompt("確認刪除請輸入「刪除」");
+  if (input === "刪除") {
+    await deleteDoc(doc(db, "categories", id));
+    alert("已刪除分類");
+    loadCategories();
+  }
+}
+
+// 初始載入
+loadCategories();
+
+  /* ===================== 新增分類對話框 ===================== */
+const addCategoryModal = document.createElement("div");
+addCategoryModal.className = "modal";
+addCategoryModal.innerHTML = `
+  <div class="modal-content">
+    <span class="close-btn" onclick="addCategoryModal.style.display='none'">×</span>
+    <h3>新增分類</h3>
+    <input type="text" id="categoryNameInput" placeholder="請輸入分類名稱">
+    <div class="modal-btns">
+      <button id="confirmAddCategory" class="btn-primary">新增</button>
+      <button onclick="addCategoryModal.style.display='none'" class="btn-secondary">取消</button>
+    </div>
+  </div>
+`;
+document.body.appendChild(addCategoryModal);
+
+// 開啟分類對話框
+document.getElementById("addCategoryBtn").onclick = () => {
+  if (!currentUser) return alert("請先登入！");
+  addCategoryModal.style.display = "flex";
+};
+
+// 儲存分類
+document.getElementById("confirmAddCategory").onclick = async () => {
+  const name = document.getElementById("categoryNameInput").value.trim();
+  if (!name) return alert("請輸入分類名稱！");
+  try {
+    await addDoc(collection(db, "categories"), {
+      name,
+      createdAt: new Date(),
+      characters: []
+    });
+    alert("分類新增完成！");
+    addCategoryModal.style.display = "none";
+    document.getElementById("categoryNameInput").value = "";
+    loadCategories();
+  } catch (e) {
+    console.error("Error adding category:", e);
+  }
+};
+
+/* ===================== 新增角色對話框 ===================== */
+const addCharacterModal = document.createElement("div");
+addCharacterModal.className = "modal";
+addCharacterModal.innerHTML = `
+  <div class="modal-content">
+    <span class="close-btn" onclick="addCharacterModal.style.display='none'">×</span>
+    <h3>新增角色</h3>
+    <input type="text" id="charName" placeholder="角色名稱">
+    <textarea id="charFull" rows="4" placeholder="角色描述 / Prompt"></textarea>
+    <div class="modal-btns">
+      <button id="saveCharacterBtn" class="btn-primary">新增</button>
+      <button onclick="addCharacterModal.style.display='none'" class="btn-secondary">取消</button>
+    </div>
+  </div>
+`;
+document.body.appendChild(addCharacterModal);
+
+let currentCategoryId = null;
+function showAddCharacter(categoryId) {
+  if (!currentUser) return alert("請先登入！");
+  currentCategoryId = categoryId;
+  addCharacterModal.style.display = "flex";
+}
+
+document.getElementById("saveCharacterBtn").onclick = async () => {
+  const name = document.getElementById("charName").value.trim();
+  const full = document.getElementById("charFull").value.trim();
+  if (!name || !full) return alert("請完整填寫角色資料！");
+  try {
+    const catRef = doc(db, "categories", currentCategoryId);
+    const catSnap = await getDoc(catRef);
+    if (catSnap.exists()) {
+      const existing = catSnap.data().characters || [];
+      existing.push({ name, short: full.substring(0, 100) + "...", full });
+      await updateDoc(catRef, { characters: existing });
+      alert("角色新增完成！");
+      addCharacterModal.style.display = "none";
+      loadCategories();
     }
-  </script>
+  } catch (e) {
+    console.error("Error adding character:", e);
+  }
+};
+
+</script>
 </body>
 </html>
