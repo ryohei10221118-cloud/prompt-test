@@ -392,7 +392,7 @@
   }
   .add-btn {
     background: #17a2b8 !important;
-    font-size: 0.9em;
+    font-size: 0.85em;
     padding: 6px 12px;
   }
   .delete-btn {
@@ -532,7 +532,7 @@
 @media (max-width: 768px) {
   body { padding: 10px; }
   .container { padding: 0 5px; }
-  h1 { font-size: 1.5em; margin-top: 60px; }
+  h1 { font-size: 1.5em; margin-top: 0; }
   .admin-bar {
     position: static;
     text-align: center;
@@ -1058,7 +1058,7 @@
 
     if (currentUser) {
       html += `<div class="section-actions">`;
-      html += `<button class="add-btn" onclick="addNewItem('${sectionName}')">➕ 新增項目</button>`;
+      html += `<button class="add-btn" onclick="addNewItem('${sectionName}')">➕ 新增</button>`;
       html += `<button class="delete-section-btn" onclick="deleteSection('${sectionName}')">🗑️ 刪除分類</button>`;
       html += `</div>`;
     }
