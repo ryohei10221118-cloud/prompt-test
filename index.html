@@ -1,70 +1,60 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>角色管理工具</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Noto Sans TC', sans-serif;
-    }
 
+  <style>
     body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      background: #f5f5f5;
       margin: 0;
       padding: 0;
-      background: #f3f5fc;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      color: #2f2f5f;
     }
 
-    h1 {
-      color: #4a3aff;
-      margin-top: 20px;
-      text-shadow: 0 0 6px rgba(74, 58, 255, 0.2);
+    header {
+      background: transparent;
+      text-align: center;
+      padding: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #2f2f9f;
     }
 
-    /* 🔹 導覽列 */
-    .category-nav {
+    .nav-bar {
       display: flex;
       overflow-x: auto;
-      gap: 10px;
+      gap: 8px;
       padding: 10px;
-      margin: 10px 0;
-      background: transparent;
       position: relative;
-      width: 90%;
-      justify-content: flex-start;
-      align-items: center;
+      justify-content: center;
     }
 
-    .category-nav button {
-      background: linear-gradient(135deg, #7a7aff, #a479ff);
+    .nav-bar button {
+      background: #7d6bff;
       color: white;
       border: none;
+      border-radius: 12px;
       padding: 8px 14px;
-      border-radius: 20px;
-      font-size: 14px;
       cursor: pointer;
       white-space: nowrap;
       transition: 0.2s;
     }
 
-    .category-nav button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 8px rgba(100, 80, 255, 0.5);
+    .nav-bar button:hover {
+      background: #5b4be0;
     }
 
-    /* 🔹 分類標題區 */
-    .category-section {
-      width: 90%;
-      margin: 30px auto;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    .category {
+      background: white;
+      margin: 25px auto;
       padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 900px;
     }
 
     .category-header {
@@ -76,378 +66,143 @@
 
     .category-header h2 {
       margin: 0;
-      color: #4a3aff;
-    }
-
-    .category-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .category-actions button {
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      padding: 6px 10px;
-      color: white;
-      background: #6a5aff;
-      transition: 0.2s;
-    }
-
-    .category-actions button:hover {
-      background: #4a3aff;
-      transform: scale(1.05);
-    }
-
-    /* 🔹 卡片容器 */
-    .character-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 15px;
+      color: #2f2f5f;
     }
 
     .character-card {
       background: #fff;
       border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      padding: 16px;
-      position: relative;
-      cursor: pointer;
-      transition: 0.2s;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      margin-bottom: 12px;
+      transition: transform 0.2s ease;
     }
 
     .character-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transform: scale(1.01);
     }
 
-    .delete-character {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      font-size: 18px;
-      background: none;
+    .character-card p {
+      background: #f0f0f0;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 8px 0;
+      color: #333;
+    }
+
+    .copy-btn {
+      background: #5b4be0;
+      color: white;
       border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
       cursor: pointer;
-      transition: 0.2s;
     }
 
-    .delete-character:hover {
-      color: red;
-      transform: scale(1.2);
+    .copy-btn:hover {
+      background: #3e34b8;
     }
 
-    /* 🔹 詳情卡 */
     .modal {
-      display: none;
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 1000;
+      z-index: 100;
     }
 
     .modal-content {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px 30px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
       width: 90%;
-      max-width: 480px;
-      padding: 20px;
-      position: relative;
-      animation: fadeIn 0.3s ease;
+      max-width: 400px;
+      text-align: center;
     }
 
     .modal-content h3 {
-      color: #4a3aff;
       margin-top: 0;
+      color: #2f2f8f;
     }
 
-    .modal-content pre {
-      background: #f7f7f7;
-      border-radius: 10px;
-      padding: 10px;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.05);
-    }
-
-    .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      border: none;
-      background: none;
-      font-size: 20px;
-      cursor: pointer;
-      color: #777;
-    }
-
-    .close-btn:hover {
-      color: #000;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-        /* 🔹 通用彈窗 */
-    .dialog-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      justify-content: center;
-      align-items: center;
-      z-index: 2000;
-    }
-
-    .dialog-box {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      padding: 20px;
+    .modal-content input,
+    .modal-content textarea {
       width: 90%;
-      max-width: 400px;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .dialog-box h3 {
-      margin-top: 0;
-      color: #4a3aff;
-      text-align: center;
-    }
-
-    .dialog-box input,
-    .dialog-box textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-
-    .dialog-buttons {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 15px;
-    }
-
-    .dialog-buttons button {
-      flex: 1;
-      margin: 0 4px;
-      border: none;
-      padding: 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .btn-confirm {
-      background: linear-gradient(135deg, #7a7aff, #a479ff);
-      color: white;
-    }
-
-    .btn-cancel {
-      background: #ddd;
-    }
-
-    .btn-confirm:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 6px rgba(100, 80, 255, 0.5);
-    }
-
-    .btn-cancel:hover {
-      background: #ccc;
-    }
-
-    /* 🔹 登入框 */
-    .login-container {
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      z-index: 3000;
-    }
-
-    .login-box {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      padding: 30px;
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-    }
-
-    .login-box h2 {
-      color: #4a3aff;
-      margin-top: 0;
-    }
-
-    .login-box input {
-      width: 100%;
-      padding: 10px;
       margin: 10px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-
-    .login-box button {
-      width: 100%;
       padding: 10px;
-      border-radius: 8px;
-      border: none;
-      margin-top: 10px;
-      cursor: pointer;
-      transition: 0.2s;
-      font-size: 15px;
-    }
-
-    .btn-login {
-      background: linear-gradient(135deg, #7a7aff, #a479ff);
-      color: white;
-    }
-
-    .btn-google {
-      background: #fff;
+      border-radius: 10px;
       border: 1px solid #ccc;
-    }
-
-    .btn-google:hover {
-      background: #eee;
-    }
-
-    /* 🔹 右上選單與回頂部按鈕 */
-    .top-menu {
-      position: fixed;
-      top: 10px;
-      right: 15px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      z-index: 1200;
-    }
-
-    .suggestion-button,
-    .logout-button {
-      border: none;
-      background: linear-gradient(135deg, #7a7aff, #a479ff);
-      color: white;
-      border-radius: 20px;
-      padding: 6px 14px;
-      cursor: pointer;
-      transition: 0.2s;
+      outline: none;
       font-size: 14px;
     }
 
-    .suggestion-button:hover,
-    .logout-button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 8px rgba(100, 80, 255, 0.4);
+    .modal-buttons {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 10px;
     }
 
-    #backToTop {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: linear-gradient(135deg, #7a7aff, #a479ff);
+    .btn-primary {
+      background: #7d6bff;
       color: white;
       border: none;
-      border-radius: 50%;
-      width: 44px;
-      height: 44px;
-      font-size: 18px;
+      border-radius: 10px;
+      padding: 8px 16px;
       cursor: pointer;
-      z-index: 1500;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-      transition: 0.3s;
     }
 
-    #backToTop:hover {
-      transform: scale(1.1);
+    .btn-secondary {
+      background: #ccc;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+
+    .delete-char {
+      float: right;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      margin-top: -10px;
+      color: #e74c3c;
+    }
+
+    .delete-char:hover {
+      transform: scale(1.2);
     }
   </style>
 </head>
+
 <body>
-  <h1>角色管理工具</h1>
+  <header>
+    <div>角色管理工具</div>
+    <button id="loginBtn">登入</button>
+  </header>
 
-  <div class="category-nav" id="categoryNav">
-    <button id="addCategoryBtn">＋新增分類</button>
-  </div>
+  <div class="nav-bar" id="navBar"></div>
+  <div id="categoriesContainer"></div>
 
-  <div id="content"></div>
-  <button id="backToTop">⬆</button>
-
-    <div class="login-container" id="loginContainer">
-    <div class="login-box">
-      <h2>登入角色管理工具</h2>
-      <input type="text" id="usernameInput" placeholder="帳號" />
-      <input type="password" id="passwordInput" placeholder="密碼" />
-      <button class="btn-login" id="loginBtn">帳號登入／註冊</button>
-      <button class="btn-google" id="googleLoginBtn">使用 Google 登入</button>
-    </div>
-  </div>
-
-  <!-- 小建議彈窗 -->
-  <div class="dialog-overlay" id="suggestionOverlay">
-    <div class="dialog-box">
-      <h3>小建議</h3>
-      <textarea id="suggestionInput" rows="4" placeholder="輸入您的建議..."></textarea>
-      <div class="dialog-buttons">
-        <button class="btn-confirm" id="submitSuggestion">送出</button>
-        <button class="btn-cancel" id="cancelSuggestion">取消</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Firebase SDK -->
+  <!-- 全功能腳本 -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      getDocs,
-      addDoc,
-      deleteDoc,
-      doc,
-      setDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      signOut,
-      onAuthStateChanged,
-      GoogleAuthProvider,
-      signInWithPopup
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
 
-    // 🔹 你的 Firebase 設定
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyBNMQG8S1qpUwfZ5Zhq26Jo05qitp4BEes",
+      authDomain: "AIzaSyBNMQG8S1qpUwfZ5Zhq26Jo05qitp4BEes",
+      projectId: "character-prompts",
+      storageBucket: "character-prompts.firebasestorage.app",
+      messagingSenderId: "798087154717",
+      appId: "1:798087154717:web:6cbbfb183cba2a05e60af4"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -455,273 +210,227 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    const categoryNav = document.getElementById("categoryNav");
-    const content = document.getElementById("content");
-    const addCategoryBtn = document.getElementById("addCategoryBtn");
-    const loginContainer = document.getElementById("loginContainer");
     const loginBtn = document.getElementById("loginBtn");
-    const googleLoginBtn = document.getElementById("googleLoginBtn");
-    const usernameInput = document.getElementById("usernameInput");
-    const passwordInput = document.getElementById("passwordInput");
-
-    const suggestionOverlay = document.getElementById("suggestionOverlay");
-    const suggestionInput = document.getElementById("suggestionInput");
-    const submitSuggestion = document.getElementById("submitSuggestion");
-    const cancelSuggestion = document.getElementById("cancelSuggestion");
-
-    const backToTop = document.getElementById("backToTop");
-
+    const navBar = document.getElementById("navBar");
+    const categoriesContainer = document.getElementById("categoriesContainer");
     let currentUser = null;
     let categories = [];
 
-    // 🔹 顯示登入畫面
-    const showLogin = () => {
-      loginContainer.style.display = "flex";
-    };
-
-    // 🔹 登入／註冊按鈕
-    loginBtn.addEventListener("click", async () => {
-      const username = usernameInput.value.trim();
-      const password = passwordInput.value;
-
-      if (!username || !password) return alert("請輸入帳號與密碼！");
-      const email = `${username}@prompt.local`; // 自動轉換為合法格式
-
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (error) {
-        if (error.code === "auth/user-not-found") {
-          await createUserWithEmailAndPassword(auth, email, password);
-        } else {
-          alert("登入失敗：" + error.message);
-        }
-      }
-    });
-
-    // 🔹 Google 登入
-    googleLoginBtn.addEventListener("click", async () => {
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (error) {
-        alert("Google 登入失敗：" + error.message);
-      }
-    });
-
-    // 🔹 登出功能
-    const logout = async () => {
-      await signOut(auth);
-    };
-
-    // 🔹 回頂部按鈕
-    window.addEventListener("scroll", () => {
-      if (window.scrollY > 300) backToTop.style.display = "block";
-      else backToTop.style.display = "none";
-    });
-    backToTop.addEventListener("click", () => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-
-    // 🔹 小建議
-    cancelSuggestion.addEventListener("click", () => {
-      suggestionOverlay.style.display = "none";
-      suggestionInput.value = "";
-    });
-    submitSuggestion.addEventListener("click", async () => {
-      const text = suggestionInput.value.trim();
-      if (!text) return alert("請輸入建議內容！");
-      await addDoc(collection(db, "suggestions"), {
-        suggestion: text,
-        user: currentUser ? currentUser.email : "未登入使用者",
-        timestamp: serverTimestamp()
-      });
-      alert("已送出建議，感謝您的回饋！");
-      suggestionOverlay.style.display = "none";
-      suggestionInput.value = "";
-    });
-
-        // 🔹 登入狀態監聽
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        loginContainer.style.display = "none";
-        renderTopMenu(user);
-        await loadCategories();
-      } else {
-        currentUser = null;
-        content.innerHTML = "";
-        categoryNav.innerHTML = `<button id="addCategoryBtn">＋新增分類</button>`;
-        addCategoryBtn.addEventListener("click", showAddCategoryDialog);
-        removeTopMenu();
-        showLogin();
-      }
-    });
-
-    // 🔹 導覽列上方選單（小建議／登出）
-    const renderTopMenu = (user) => {
-      removeTopMenu();
-      const topMenu = document.createElement("div");
-      topMenu.className = "top-menu";
-      topMenu.innerHTML = `
-        <span style="color:#555;font-size:14px;">${user.displayName || user.email.split("@")[0]}</span>
-        <button class="suggestion-button" id="suggestionBtn">💬 小建議</button>
-        <button class="logout-button" id="logoutBtn">登出</button>
+    function showLoginDialog() {
+      const modal = document.createElement("div");
+      modal.className = "modal";
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h3>登入或註冊帳號</h3>
+          <input type="text" id="account" placeholder="帳號（自訂名稱）" />
+          <input type="password" id="password" placeholder="密碼" />
+          <div class="modal-buttons">
+            <button id="loginConfirm" class="btn-primary">登入</button>
+            <button id="registerBtn" class="btn-secondary">註冊</button>
+          </div>
+          <hr>
+          <button id="googleLogin" class="btn-primary">使用 Google 登入</button>
+        </div>
       `;
-      document.body.appendChild(topMenu);
-      document.getElementById("suggestionBtn").addEventListener("click", () => {
-        suggestionOverlay.style.display = "flex";
-      });
-      document.getElementById("logoutBtn").addEventListener("click", logout);
-    };
+      document.body.appendChild(modal);
 
-    const removeTopMenu = () => {
-      const old = document.querySelector(".top-menu");
-      if (old) old.remove();
-    };
+      modal.querySelector("#loginConfirm").onclick = async () => {
+        const account = document.getElementById("account").value.trim();
+        const password = document.getElementById("password").value.trim();
+        if (!account || !password) return alert("請輸入帳號與密碼！");
+        try {
+          const email = `${account}@prompt.local`;
+          await signInWithEmailAndPassword(auth, email, password);
+          modal.remove();
+        } catch (e) {
+          alert("登入失敗：" + e.message);
+        }
+      };
 
-    // 🔹 載入分類
-    async function loadCategories() {
-      categoryNav.innerHTML = `<button id="addCategoryBtn">＋新增分類</button>`;
-      addCategoryBtn.addEventListener("click", showAddCategoryDialog);
-      const querySnapshot = await getDocs(collection(db, "categories"));
+      modal.querySelector("#registerBtn").onclick = async () => {
+        const account = document.getElementById("account").value.trim();
+        const password = document.getElementById("password").value.trim();
+        if (!account || !password) return alert("請輸入帳號與密碼！");
+        try {
+          const email = `${account}@prompt.local`;
+          await createUserWithEmailAndPassword(auth, email, password);
+          modal.remove();
+        } catch (e) {
+          alert("註冊失敗：" + e.message);
+        }
+      };
+
+      modal.querySelector("#googleLogin").onclick = async () => {
+        try {
+          await signInWithPopup(auth, provider);
+          modal.remove();
+        } catch (e) {
+          alert("Google 登入失敗：" + e.message);
+        }
+      };
+    }
+
+    loginBtn.onclick = showLoginDialog;
+
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      if (user) {
+        loginBtn.textContent = "登出";
+        loginBtn.onclick = async () => {
+          await signOut(auth);
+          loginBtn.textContent = "登入";
+          loginBtn.onclick = showLoginDialog;
+        };
+      } else {
+        loginBtn.textContent = "登入";
+        loginBtn.onclick = showLoginDialog;
+      }
+      await loadCategories(user);
+    });
+
+    async function loadCategories(user) {
+      categoriesContainer.innerHTML = "";
+      navBar.innerHTML = "";
+      const snapshot = await getDocs(collection(db, "categories"));
       categories = [];
-      content.innerHTML = "";
-
-      querySnapshot.forEach((docSnap) => {
+      snapshot.forEach((docSnap) => {
         const data = docSnap.data();
         categories.push({ id: docSnap.id, name: data.name });
       });
 
-      // 依建立順序排序
-      categories.sort((a, b) => a.name === "角色描述" ? -1 : 1);
+      if (user) {
+        const addBtn = document.createElement("button");
+        addBtn.textContent = "＋新增分類";
+        addBtn.onclick = showAddCategoryDialog;
+        navBar.appendChild(addBtn);
+      }
 
       categories.forEach((cat) => {
-        renderCategory(cat);
-        addNavButton(cat.name);
+        const btn = document.createElement("button");
+        btn.textContent = cat.name;
+        btn.onclick = () => {
+          document.getElementById(cat.id)?.scrollIntoView({ behavior: "smooth" });
+        };
+        navBar.appendChild(btn);
       });
+
+      categories.forEach((cat) => renderCategory(cat, user));
     }
 
-    // 🔹 導覽列按鈕
-    function addNavButton(name) {
-      const btn = document.createElement("button");
-      btn.textContent = name;
-      btn.addEventListener("click", () => {
-        const section = document.getElementById(name);
-        if (section) section.scrollIntoView({ behavior: "smooth" });
-      });
-      categoryNav.appendChild(btn);
-    }
-
-    // 🔹 新增分類對話框
-    function showAddCategoryDialog() {
-      const overlay = document.createElement("div");
-      overlay.className = "dialog-overlay";
-      overlay.style.display = "flex";
-      overlay.innerHTML = `
-        <div class="dialog-box">
-          <h3>新增分類</h3>
-          <input id="newCategoryName" placeholder="輸入分類名稱..." />
-          <div class="dialog-buttons">
-            <button class="btn-confirm" id="confirmAddCategory">新增</button>
-            <button class="btn-cancel" id="cancelAddCategory">取消</button>
-          </div>
-        </div>`;
-      document.body.appendChild(overlay);
-
-      document.getElementById("cancelAddCategory").onclick = () => overlay.remove();
-      document.getElementById("confirmAddCategory").onclick = async () => {
-        const name = document.getElementById("newCategoryName").value.trim();
-        if (!name) return alert("請輸入分類名稱！");
-        await addDoc(collection(db, "categories"), { name });
-        overlay.remove();
-        await loadCategories();
-      };
-    }
-
-    // 🔹 分類顯示
-    function renderCategory(cat) {
+    function renderCategory(cat, user) {
       const section = document.createElement("div");
-      section.className = "category-section";
-      section.id = cat.name;
+      section.className = "category";
+      section.id = cat.id;
       section.innerHTML = `
         <div class="category-header">
           <h2>${cat.name}</h2>
-          <div class="category-actions">
-            <button class="add-character">新增</button>
-            <button class="delete-category">🗑️</button>
-          </div>
+          <div class="category-actions"></div>
         </div>
-        <div class="character-list" id="list-${cat.id}"></div>
+        <div class="character-list"></div>
       `;
-      content.appendChild(section);
-
-      section.querySelector(".add-character").addEventListener("click", () =>
-        showAddCharacterDialog(cat.id)
-      );
-      section.querySelector(".delete-category").addEventListener("click", () =>
-        confirmDeleteCategory(cat)
-      );
-    }
-
-    // 🔹 刪除分類
-    async function confirmDeleteCategory(cat) {
-      const input = prompt(`確認刪除分類「${cat.name}」？請輸入「刪除」以確認。`);
-      if (input === "刪除") {
-        await deleteDoc(doc(db, "categories", cat.id));
-        await loadCategories();
+      const actions = section.querySelector(".category-actions");
+      if (user) {
+        const add = document.createElement("button");
+        add.textContent = "新增";
+        add.onclick = () => showAddCharacterDialog(cat.id);
+        const del = document.createElement("button");
+        del.textContent = "🗑️";
+        del.onclick = () => confirmDeleteCategory(cat);
+        actions.append(add, del);
       }
+      categoriesContainer.appendChild(section);
+      loadCharacters(cat.id, section.querySelector(".character-list"), user);
     }
 
-    // 🔹 新增角色對話框
-    function showAddCharacterDialog(categoryId) {
-      const overlay = document.createElement("div");
-      overlay.className = "dialog-overlay";
-      overlay.style.display = "flex";
-      overlay.innerHTML = `
-        <div class="dialog-box">
-          <h3>新增角色</h3>
-          <input id="characterName" placeholder="角色名稱" />
-          <textarea id="characterPrompt" rows="4" placeholder="角色描述..."></textarea>
-          <div class="dialog-buttons">
-            <button class="btn-confirm" id="confirmAddCharacter">新增</button>
-            <button class="btn-cancel" id="cancelAddCharacter">取消</button>
-          </div>
-        </div>`;
-      document.body.appendChild(overlay);
-
-      document.getElementById("cancelAddCharacter").onclick = () => overlay.remove();
-      document.getElementById("confirmAddCharacter").onclick = async () => {
-        const name = document.getElementById("characterName").value.trim();
-        const promptText = document.getElementById("characterPrompt").value.trim();
-        if (!name || !promptText) return alert("請輸入角色名稱與描述！");
-        await addDoc(collection(db, `categories/${categoryId}/characters`), {
-          name,
-          prompt: promptText,
-          createdAt: serverTimestamp()
-        });
-        overlay.remove();
-        await loadCategories();
-      };
+    async function loadCharacters(categoryId, container, user) {
+      container.innerHTML = "";
+      const charSnap = await getDocs(collection(db, `categories/${categoryId}/characters`));
+      charSnap.forEach((c) => {
+        const data = c.data();
+        const card = document.createElement("div");
+        card.className = "character-card";
+        card.innerHTML = `
+          <h3>${data.name}</h3>
+          <p>${data.prompt}</p>
+          <button class="copy-btn">📋 複製 Prompt</button>
+        `;
+        card.querySelector(".copy-btn").onclick = () => {
+          navigator.clipboard.writeText(data.prompt);
+          alert("已複製 Prompt！");
+        };
+        if (user) {
+          const del = document.createElement("button");
+          del.className = "delete-char";
+          del.textContent = "🗑️";
+          del.onclick = async () => {
+            const confirmTxt = prompt(`確定刪除角色「${data.name}」？請輸入「刪除」以確認`);
+            if (confirmTxt === "刪除") {
+              await deleteDoc(doc(db, `categories/${categoryId}/characters`, c.id));
+              loadCharacters(categoryId, container, user);
+            }
+          };
+          card.appendChild(del);
+        }
+        container.appendChild(card);
+      });
     }
 
-    // 🔹 詳情卡顯示
-    function showCharacterModal(name, promptText) {
+    function showAddCategoryDialog() {
       const modal = document.createElement("div");
       modal.className = "modal";
-      modal.style.display = "flex";
       modal.innerHTML = `
         <div class="modal-content">
-          <button class="close-btn">✕</button>
-          <h3>${name}</h3>
-          <pre>${promptText}</pre>
-          <button class="btn-confirm" id="copyPrompt">📋 複製 Prompt</button>
+          <h3>新增分類</h3>
+          <input id="newCategoryName" placeholder="請輸入分類名稱">
+          <div class="modal-buttons">
+            <button class="btn-primary" id="confirmAdd">新增</button>
+            <button class="btn-secondary" id="cancelAdd">取消</button>
+          </div>
         </div>
       `;
       document.body.appendChild(modal);
-      modal.querySelector(".close-btn").onclick = () => modal.remove();
-      modal.querySelector("#copyPrompt").onclick = () => {
-        navigator.clipboard.writeText(promptText);
-        alert("已複製 Prompt！");
+      modal.querySelector("#cancelAdd").onclick = () => modal.remove();
+      modal.querySelector("#confirmAdd").onclick = async () => {
+        const name = document.getElementById("newCategoryName").value.trim();
+        if (!name) return alert("請輸入名稱！");
+        await setDoc(doc(collection(db, "categories")), { name });
+        modal.remove();
+        loadCategories(currentUser);
       };
+    }
+
+    function showAddCharacterDialog(categoryId) {
+      const modal = document.createElement("div");
+      modal.className = "modal";
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h3>新增角色</h3>
+          <input id="newCharacterName" placeholder="角色名稱">
+          <textarea id="newCharacterPrompt" placeholder="角色描述"></textarea>
+          <div class="modal-buttons">
+            <button class="btn-primary" id="confirmAddChar">新增</button>
+            <button class="btn-secondary" id="cancelChar">取消</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.querySelector("#cancelChar").onclick = () => modal.remove();
+      modal.querySelector("#confirmAddChar").onclick = async () => {
+        const name = document.getElementById("newCharacterName").value.trim();
+        const prompt = document.getElementById("newCharacterPrompt").value.trim();
+        if (!name || !prompt) return alert("請完整輸入角色資料！");
+        await addDoc(collection(db, `categories/${categoryId}/characters`), { name, prompt });
+        modal.remove();
+        loadCharacters(categoryId, document.querySelector(`#${categoryId} .character-list`), currentUser);
+      };
+    }
+
+    async function confirmDeleteCategory(cat) {
+      const input = prompt(`確定刪除分類「${cat.name}」？請輸入「刪除」以確認`);
+      if (input === "刪除") {
+        await deleteDoc(doc(db, "categories", cat.id));
+        loadCategories(currentUser);
+      }
     }
   </script>
 </body>
