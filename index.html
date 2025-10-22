@@ -1044,6 +1044,15 @@
       `;
     }
 
+    // 如果已登入，顯示刪除按鈕
+    if (currentUser) {
+      bodyHtml += `
+        <div class="modal-actions" style="margin-top: 15px;">
+          <button class="delete-btn" onclick="deleteItemFromModal('${sectionName}', ${itemIndex})">🗑️ 刪除此角色</button>
+        </div>
+      `;
+    }
+
     document.getElementById('modalBody').innerHTML = bodyHtml;
     modal.classList.add('show');
   };
@@ -1102,13 +1111,35 @@
     }
   };
 
-  // 刪除項目
+  // 刪除項目（從編輯模式）
   window.deleteItem = async function(sectionName, itemIndex) {
-    if (!confirm('確定要刪除這個項目嗎？')) return;
+    const input = prompt('確認刪除請輸入「刪除」');
+    if (input !== '刪除') {
+      if (input !== null) alert('取消刪除');
+      return;
+    }
 
     allData[sectionName].items.splice(itemIndex, 1);
 
     if (await saveData()) {
+      alert('已刪除項目');
+      renderUI();
+    }
+  };
+
+  // 從 Modal 刪除項目
+  window.deleteItemFromModal = async function(sectionName, itemIndex) {
+    const input = prompt('確認刪除請輸入「刪除」');
+    if (input !== '刪除') {
+      if (input !== null) alert('取消刪除');
+      return;
+    }
+
+    allData[sectionName].items.splice(itemIndex, 1);
+
+    if (await saveData()) {
+      alert('已刪除項目');
+      closeModal();
       renderUI();
     }
   };
@@ -1132,11 +1163,16 @@
 
   // 刪除分類
   window.deleteSection = async function(sectionName) {
-    if (!confirm(`確定要刪除「${sectionName}」分類嗎？這將刪除該分類下的所有項目。`)) return;
+    const input = prompt(`確定要刪除「${sectionName}」分類嗎？這將刪除該分類下的所有項目。\n\n請輸入「刪除」確認：`);
+    if (input !== '刪除') {
+      if (input !== null) alert('取消刪除');
+      return;
+    }
 
     delete allData[sectionName];
 
     if (await saveData()) {
+      alert('已刪除分類');
       renderUI();
     }
   };
