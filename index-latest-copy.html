@@ -874,6 +874,10 @@
     document.getElementById('loginAccount').value = '';
     document.getElementById('loginPassword').value = '';
     document.getElementById('loginModal').classList.add('show');
+    // 延遲聚焦，確保 Modal 動畫完成後鍵盤才彈出
+    setTimeout(() => {
+      document.getElementById('loginAccount').focus();
+    }, 300);
   });
 
   // 關閉登入 Modal
@@ -1261,6 +1265,11 @@
     document.getElementById('newItemPrompt').value = '';
     document.getElementById('newItemPixaiPrompt').value = '';
     document.getElementById('addItemModal').classList.add('show');
+
+    // 自動聚焦到角色名稱輸入框
+    setTimeout(() => {
+      document.getElementById('newItemName').focus();
+    }, 300);
   };
 
   // 關閉新增項目 Modal
@@ -1338,6 +1347,11 @@
     document.querySelectorAll('.emoji-option').forEach(opt => {
       opt.classList.remove('selected');
     });
+
+    // 自動聚焦到分類名稱輸入框
+    setTimeout(() => {
+      document.getElementById('newCategoryName').focus();
+    }, 300);
   };
 
   // 關閉新增分類 Modal
@@ -1430,6 +1444,11 @@
     document.getElementById('suggestionText').value = '';
     document.getElementById('suggestionModal').classList.add('show');
     closeUserMenu();
+
+    // 自動聚焦到建議輸入框
+    setTimeout(() => {
+      document.getElementById('suggestionText').focus();
+    }, 300);
   };
 
   // 關閉建議 Modal
