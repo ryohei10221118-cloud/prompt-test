@@ -118,11 +118,30 @@
   }
   .nav-buttons {
     display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
     gap: 15px;
     margin-bottom: 30px;
     align-items: center;
+    padding: 10px 0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #667eea #f0f0f0;
+  }
+  .nav-buttons::-webkit-scrollbar {
+    height: 6px;
+  }
+  .nav-buttons::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 3px;
+  }
+  .nav-buttons::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 3px;
+  }
+  .nav-buttons::-webkit-scrollbar-thumb:hover {
+    background: #5568d3;
   }
   .nav-btn {
     padding: 12px 24px;
@@ -280,11 +299,24 @@
     margin-bottom: 20px;
     padding-bottom: 15px;
     border-bottom: 2px solid #667eea;
+    gap: 10px;
   }
   .modal-title {
     font-size: 1.5em;
     color: #2c3e50;
     font-weight: bold;
+    flex: 1;
+  }
+  .modal-header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .modal-header-actions button {
+    padding: 6px 12px;
+    font-size: 0.85em;
+    margin: 0;
+    white-space: nowrap;
   }
   .close-btn {
     background: #dc3545 !important;
@@ -392,7 +424,7 @@
   }
   .add-btn {
     background: #17a2b8 !important;
-    font-size: 1em;
+    font-size: 0.9em;
     padding: 6px 12px;
   }
   .delete-btn {
@@ -400,7 +432,7 @@
   }
   .delete-section-btn {
     background: #dc3545 !important;
-    font-size: 1em;
+    font-size: 0.9em;
     padding: 6px 12px;
   }
   .cancel-btn {
@@ -543,7 +575,7 @@
     font-size: 0.9em;
   }
   .add-btn, .delete-section-btn {
-    font-size: 0.9em;
+    font-size: 0.85em;
   }
   .section-title {
     font-size: 1.2em;
@@ -589,10 +621,6 @@
         <div class="user-menu-name" id="menuUserName"></div>
         <div class="user-menu-email" id="menuUserEmail"></div>
       </div>
-      <div class="user-menu-item edit" onclick="toggleEditModeFromMenu()">
-        <span>✏️</span>
-        <span id="editModeText">進入編輯模式</span>
-      </div>
       <div class="user-menu-item suggest" onclick="openSuggestionModal()">
         <span>💡</span>
         <span>小小建議</span>
@@ -631,6 +659,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h2 class="modal-title" id="modalTitle"></h2>
+      <div class="modal-header-actions" id="modalHeaderActions"></div>
       <button class="close-btn" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
@@ -892,10 +921,6 @@
     } else {
       loginBtn.classList.remove('hidden');
       avatarContainer.classList.add('hidden');
-      if (isEditMode) {
-        isEditMode = false;
-        renderUI();
-      }
     }
   }
 
@@ -990,15 +1015,6 @@
       userMenu.classList.remove('show');
     }
   });
-
-  // 從選單切換編輯模式
-  window.toggleEditModeFromMenu = function() {
-    if (!currentUser) return;
-    isEditMode = !isEditMode;
-    document.getElementById('editModeText').textContent = isEditMode ? '離開編輯模式' : '進入編輯模式';
-    renderUI();
-    closeUserMenu();
-  };
 
   // 載入資料
   async function loadData() {
@@ -1101,11 +1117,7 @@
     html += `<div class="items-grid">`;
 
     section.items.forEach((item, index) => {
-      if (isEditMode && currentUser) {
-        html += renderItemEditMode(sectionName, item, index);
-      } else {
-        html += renderItemViewMode(sectionName, item, index);
-      }
+      html += renderItemViewMode(sectionName, item, index);
     });
 
     html += `</div></div>`;
@@ -1147,6 +1159,16 @@
     const modal = document.getElementById('itemModal');
     document.getElementById('modalTitle').textContent = item.name;
 
+    // 設置 header 的編輯和刪除按鈕
+    let headerActionsHtml = '';
+    if (currentUser) {
+      headerActionsHtml = `
+        <button class="save-btn" onclick="openEditItemModal('${sectionName}', ${itemIndex})">✏️ 編輯</button>
+        <button class="delete-btn" onclick="deleteItemFromModal('${sectionName}', ${itemIndex})">🗑️ 刪除</button>
+      `;
+    }
+    document.getElementById('modalHeaderActions').innerHTML = headerActionsHtml;
+
     let bodyHtml = '';
 
     // 判斷顯示邏輯
@@ -1172,16 +1194,6 @@
           <div class="modal-actions">
             <button class="copy-modal-btn" onclick="copyFromModal('${sectionName}', ${itemIndex}, 'pixaiPrompt')">📋 複製 PixAI 版本</button>
           </div>
-        </div>
-      `;
-    }
-
-    // 如果已登入，顯示編輯和刪除按鈕
-    if (currentUser) {
-      bodyHtml += `
-        <div class="modal-actions" style="margin-top: 15px; gap: 10px;">
-          <button class="save-btn" onclick="openEditItemModal('${sectionName}', ${itemIndex})">✏️ 編輯</button>
-          <button class="delete-btn" onclick="deleteItemFromModal('${sectionName}', ${itemIndex})">🗑️ 刪除</button>
         </div>
       `;
     }
