@@ -774,4 +774,533 @@
         { name: "溫景悅", prompt: "a tall handsome man , black hair with a few natural gray strands, softly parted and slightly wavy, slender big eyes, double eyelids, thin lips, a mole below the left eye" },
         { name: "楚汐", prompt: "ultra-short clean haircut, no bangs, short pompadour hairstyle, soft beige-brown gradient hair color, slightly wavy texture, narrow black eyes, black irises, one raised eyebrow, thin lips, one-sided smirk, asymmetric cocky grin, gold thin-rimmed glasses slipping down nose, wearing black and white street-style jacket, silver rings, delicate semi-realistic style, soft lighting", pixaiPrompt: "ultra-short clean haircut, no bangs, The Mellow Beige hair,slightly wavy texture,black irises eyes, thin lips, one raised eyebrow,one-sided smirk, asymmetric cocky grin gold thin-rimmed glasses slipping down nose, wearing black and white street-style jacket, silver rings" },
         { name: "祈盞", prompt: "black long hair tied in elegant ancient bun with loose strands, vivid purple eyes" },
-        { name: "孜蘊", prompt: "ultra wide-angle shot, full-body view
+        { name: "孜蘊", prompt: "ultra wide-angle shot, full-body view, black short hair, tousled messy strands, deep purple-red eyes" }
+      ]
+    }
+  };
+
+  // 初始化
+  window.addEventListener('DOMContentLoaded', () => {
+    initializeEmojiPicker();
+    checkAuthAndLoadData();
+  });
+
+  // 監聽認證狀態
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    updateUIForAuth();
+  });
+
+  // 檢查認證並載入資料
+  async function checkAuthAndLoadData() {
+    try {
+      await loadData();
+      document.getElementById('loadingIndicator').classList.add('hidden');
+      document.getElementById('contentArea').classList.remove('hidden');
+    } catch (error) {
+      console.error('Error loading data:', error);
+      document.getElementById('loadingIndicator').classList.add('hidden');
+      document.getElementById('errorMessage').classList.remove('hidden');
+      document.getElementById('contentArea').classList.remove('hidden');
+      allData = defaultData;
+      renderUI();
+    }
+  }
+
+  // 更新認證相關 UI
+  function updateUIForAuth() {
+    const loginBtn = document.getElementById('loginBtn');
+    const avatarContainer = document.getElementById('userAvatarContainer');
+
+    if (currentUser) {
+      loginBtn.classList.add('hidden');
+      avatarContainer.classList.remove('hidden');
+      document.getElementById('userAvatar').src = currentUser.photoURL || '';
+      document.getElementById('menuUserName').textContent = currentUser.displayName || '';
+      document.getElementById('menuUserEmail').textContent = currentUser.email || '';
+    } else {
+      loginBtn.classList.remove('hidden');
+      avatarContainer.classList.add('hidden');
+      if (isEditMode) {
+        isEditMode = false;
+        renderUI();
+      }
+    }
+  }
+
+  // Google 登入
+  window.googleLogin = async function() {
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('登入失敗，請重試');
+    }
+  };
+
+  // 登出
+  window.logout = async function() {
+    try {
+      await signOut(auth);
+      closeUserMenu();
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('登出失敗，請重試');
+    }
+  };
+
+  // 切換使用者選單
+  window.toggleUserMenu = function() {
+    const menu = document.getElementById('userMenu');
+    menu.classList.toggle('show');
+  };
+
+  // 關閉使用者選單
+  function closeUserMenu() {
+    document.getElementById('userMenu').classList.remove('show');
+  }
+
+  // 點擊外部關閉選單
+  document.addEventListener('click', (e) => {
+    const avatarContainer = document.getElementById('userAvatarContainer');
+    const userMenu = document.getElementById('userMenu');
+    if (!avatarContainer.contains(e.target)) {
+      userMenu.classList.remove('show');
+    }
+  });
+
+  // 從選單切換編輯模式
+  window.toggleEditModeFromMenu = function() {
+    if (!currentUser) return;
+    isEditMode = !isEditMode;
+    document.getElementById('editModeText').textContent = isEditMode ? '離開編輯模式' : '進入編輯模式';
+    renderUI();
+    closeUserMenu();
+  };
+
+  // 載入資料
+  async function loadData() {
+    try {
+      const docRef = doc(db, 'prompts', 'main');
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        allData = docSnap.data().data || defaultData;
+      } else {
+        allData = defaultData;
+      }
+      renderUI();
+    } catch (error) {
+      console.error('Error loading data:', error);
+      allData = defaultData;
+      renderUI();
+      throw error;
+    }
+  }
+
+  // 儲存資料
+  async function saveData() {
+    if (!currentUser) {
+      alert('請先登入');
+      return false;
+    }
+
+    try {
+      const docRef = doc(db, 'prompts', 'main');
+      await setDoc(docRef, {
+        data: allData,
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser.email
+      });
+      return true;
+    } catch (error) {
+      console.error('Error saving data:', error);
+      alert('儲存失敗：' + error.message);
+      return false;
+    }
+  }
+
+  // 渲染 UI
+  function renderUI() {
+    renderNavigationButtons();
+    renderSections();
+  }
+
+  // 渲染導航按鈕
+  function renderNavigationButtons() {
+    const container = document.getElementById('navButtons');
+    const sortedSections = Object.entries(allData).sort((a, b) => {
+      return (a[1].createdAt || 0) - (b[1].createdAt || 0);
+    });
+
+    let html = '';
+    sortedSections.forEach(([name, section]) => {
+      const icon = section.icon || '📁';
+      html += `<button class="nav-btn" onclick="scrollToSection('${name}')">${icon} ${name}</button>`;
+    });
+
+    if (currentUser && isEditMode) {
+      html += `<button class="add-category-btn-inline" onclick="openAddCategoryModal()">➕ 新增分類</button>`;
+    }
+
+    container.innerHTML = html;
+  }
+
+  // 渲染所有分類
+  function renderSections() {
+    const container = document.getElementById('sectionsContainer');
+    const sortedSections = Object.entries(allData).sort((a, b) => {
+      return (a[1].createdAt || 0) - (b[1].createdAt || 0);
+    });
+
+    let html = '';
+    sortedSections.forEach(([name, section]) => {
+      html += renderSection(name, section);
+    });
+
+    container.innerHTML = html;
+  }
+
+  // 渲染單一分類
+  function renderSection(sectionName, section) {
+    const icon = section.icon || '📁';
+    let html = `<div class="section-container" id="section-${sectionName}">`;
+    html += `<div class="section-title">`;
+    html += `<span>${icon} ${sectionName}</span>`;
+
+    if (currentUser && isEditMode) {
+      html += `<div class="section-actions">`;
+      html += `<button class="add-btn" onclick="addNewItem('${sectionName}')">➕ 新增項目</button>`;
+      html += `<button class="delete-section-btn" onclick="deleteSection('${sectionName}')">🗑️ 刪除分類</button>`;
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+    html += `<div class="items-grid">`;
+
+    section.items.forEach((item, index) => {
+      if (isEditMode && currentUser) {
+        html += renderItemEditMode(sectionName, item, index);
+      } else {
+        html += renderItemViewMode(sectionName, item, index);
+      }
+    });
+
+    html += `</div></div>`;
+    return html;
+  }
+
+  // 渲染項目（檢視模式）
+  function renderItemViewMode(sectionName, item, index) {
+    return `
+      <div class="item-card" onclick="openItemModal('${sectionName}', ${index})">
+        <div class="item-card-name">${item.name}</div>
+      </div>
+    `;
+  }
+
+  // 渲染項目（編輯模式）
+  function renderItemEditMode(sectionName, item, index) {
+    return `
+      <div class="box">
+        <h2>${item.name}</h2>
+        <textarea class="edit-textarea" id="textarea-${sectionName}-${index}">${item.prompt}</textarea>
+        ${item.pixaiPrompt ? `
+        <div class="pixai-section">
+          <span class="pixai-badge">PixAI 版本</span>
+          <textarea class="edit-textarea" id="pixai-${sectionName}-${index}">${item.pixaiPrompt}</textarea>
+        </div>
+        ` : ''}
+        <div class="edit-controls">
+          <button class="save-btn" onclick="saveItem('${sectionName}', ${index})">💾 儲存</button>
+          <button class="delete-btn" onclick="deleteItem('${sectionName}', ${index})">🗑️ 刪除</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // 開啟項目 Modal
+  window.openItemModal = function(sectionName, itemIndex) {
+    const item = allData[sectionName].items[itemIndex];
+    const modal = document.getElementById('itemModal');
+    document.getElementById('modalTitle').textContent = item.name;
+
+    let bodyHtml = `
+      <div class="modal-prompt">${item.prompt}</div>
+      <div class="modal-actions">
+        <button class="copy-modal-btn" onclick="copyFromModal('${sectionName}', ${itemIndex}, 'prompt')">📋 複製</button>
+      </div>
+    `;
+
+    if (item.pixaiPrompt) {
+      bodyHtml += `
+        <div class="pixai-section">
+          <span class="pixai-badge">PixAI 版本</span>
+          <div class="modal-prompt">${item.pixaiPrompt}</div>
+          <div class="modal-actions">
+            <button class="copy-modal-btn" onclick="copyFromModal('${sectionName}', ${itemIndex}, 'pixaiPrompt')">📋 複製 PixAI 版本</button>
+          </div>
+        </div>
+      `;
+    }
+
+    document.getElementById('modalBody').innerHTML = bodyHtml;
+    modal.classList.add('show');
+  };
+
+  // 關閉 Modal
+  window.closeModal = function() {
+    document.getElementById('itemModal').classList.remove('show');
+  };
+
+  // 點擊背景關閉 Modal
+  window.closeModalOnBackdrop = function(event) {
+    if (event.target === document.getElementById('itemModal')) {
+      closeModal();
+    }
+  };
+
+  // 從 Modal 複製
+  window.copyFromModal = async function(sectionName, itemIndex, promptType) {
+    const item = allData[sectionName].items[itemIndex];
+    const text = item[promptType];
+
+    try {
+      await navigator.clipboard.writeText(text);
+      event.target.textContent = '✓ 已複製';
+      event.target.classList.add('copied');
+      setTimeout(() => {
+        event.target.textContent = '📋 複製' + (promptType === 'pixaiPrompt' ? ' PixAI 版本' : '');
+        event.target.classList.remove('copied');
+      }, 2000);
+    } catch (err) {
+      console.error('Copy failed:', err);
+      alert('複製失敗');
+    }
+  };
+
+  // 滾動到分類
+  window.scrollToSection = function(sectionName) {
+    const element = document.getElementById(`section-${sectionName}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // 儲存項目
+  window.saveItem = async function(sectionName, itemIndex) {
+    const textarea = document.getElementById(`textarea-${sectionName}-${itemIndex}`);
+    const pixaiTextarea = document.getElementById(`pixai-${sectionName}-${itemIndex}`);
+
+    allData[sectionName].items[itemIndex].prompt = textarea.value;
+    if (pixaiTextarea) {
+      allData[sectionName].items[itemIndex].pixaiPrompt = pixaiTextarea.value;
+    }
+
+    if (await saveData()) {
+      alert('儲存成功！');
+    }
+  };
+
+  // 刪除項目
+  window.deleteItem = async function(sectionName, itemIndex) {
+    if (!confirm('確定要刪除這個項目嗎？')) return;
+
+    allData[sectionName].items.splice(itemIndex, 1);
+
+    if (await saveData()) {
+      renderUI();
+    }
+  };
+
+  // 新增項目
+  window.addNewItem = async function(sectionName) {
+    const name = prompt('請輸入項目名稱：');
+    if (!name) return;
+
+    const newItem = {
+      name: name,
+      prompt: ''
+    };
+
+    allData[sectionName].items.push(newItem);
+
+    if (await saveData()) {
+      renderUI();
+    }
+  };
+
+  // 刪除分類
+  window.deleteSection = async function(sectionName) {
+    if (!confirm(`確定要刪除「${sectionName}」分類嗎？這將刪除該分類下的所有項目。`)) return;
+
+    delete allData[sectionName];
+
+    if (await saveData()) {
+      renderUI();
+    }
+  };
+
+  // 開啟新增分類 Modal
+  window.openAddCategoryModal = function() {
+    selectedEmoji = '📁';
+    document.getElementById('newCategoryName').value = '';
+    document.getElementById('emojiInput').value = '';
+    document.getElementById('emojiPreview').textContent = selectedEmoji;
+    document.getElementById('addCategoryModal').classList.add('show');
+
+    // 清除選中狀態
+    document.querySelectorAll('.emoji-option').forEach(opt => {
+      opt.classList.remove('selected');
+    });
+  };
+
+  // 關閉新增分類 Modal
+  window.closeAddCategoryModal = function() {
+    document.getElementById('addCategoryModal').classList.remove('show');
+    document.getElementById('emojiPicker').classList.remove('show');
+  };
+
+  // 點擊背景關閉
+  window.closeAddCategoryModalOnBackdrop = function(event) {
+    if (event.target === document.getElementById('addCategoryModal')) {
+      closeAddCategoryModal();
+    }
+  };
+
+  // 確認新增分類
+  window.confirmAddCategory = async function() {
+    const name = document.getElementById('newCategoryName').value.trim();
+
+    if (!name) {
+      alert('請輸入分類名稱');
+      return;
+    }
+
+    if (allData[name]) {
+      alert('該分類名稱已存在');
+      return;
+    }
+
+    const maxCreatedAt = Math.max(...Object.values(allData).map(s => s.createdAt || 0), 0);
+
+    allData[name] = {
+      icon: selectedEmoji,
+      createdAt: maxCreatedAt + 1,
+      items: []
+    };
+
+    if (await saveData()) {
+      closeAddCategoryModal();
+      renderUI();
+    }
+  };
+
+  // 初始化 Emoji Picker
+  function initializeEmojiPicker() {
+    const picker = document.getElementById('emojiPicker');
+    let html = '';
+    commonEmojis.forEach(emoji => {
+      html += `<div class="emoji-option" onclick="selectEmoji('${emoji}')">${emoji}</div>`;
+    });
+    picker.innerHTML = html;
+  }
+
+  // 切換 Emoji Picker
+  window.toggleEmojiPicker = function() {
+    document.getElementById('emojiPicker').classList.toggle('show');
+  };
+
+  // 選擇 Emoji
+  window.selectEmoji = function(emoji) {
+    selectedEmoji = emoji;
+    document.getElementById('emojiInput').value = emoji;
+    document.getElementById('emojiPreview').textContent = emoji;
+
+    // 更新選中狀態
+    document.querySelectorAll('.emoji-option').forEach(opt => {
+      opt.classList.remove('selected');
+      if (opt.textContent === emoji) {
+        opt.classList.add('selected');
+      }
+    });
+  };
+
+  // 從輸入更新 Emoji
+  window.updateEmojiFromInput = function() {
+    const input = document.getElementById('emojiInput').value;
+    if (input) {
+      selectedEmoji = input;
+      document.getElementById('emojiPreview').textContent = input;
+    }
+  };
+
+  // 開啟建議 Modal
+  window.openSuggestionModal = function() {
+    document.getElementById('suggestionText').value = '';
+    document.getElementById('suggestionModal').classList.add('show');
+    closeUserMenu();
+  };
+
+  // 關閉建議 Modal
+  window.closeSuggestionModal = function() {
+    document.getElementById('suggestionModal').classList.remove('show');
+  };
+
+  // 點擊背景關閉
+  window.closeSuggestionModalOnBackdrop = function(event) {
+    if (event.target === document.getElementById('suggestionModal')) {
+      closeSuggestionModal();
+    }
+  };
+
+  // 提交建議
+  window.submitSuggestion = async function() {
+    const text = document.getElementById('suggestionText').value.trim();
+
+    if (!text) {
+      alert('請輸入建議內容');
+      return;
+    }
+
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
+    try {
+      const suggestionRef = doc(db, 'suggestions', new Date().getTime().toString());
+      await setDoc(suggestionRef, {
+        text: text,
+        user: currentUser.email,
+        userName: currentUser.displayName,
+        timestamp: new Date().toISOString()
+      });
+
+      alert('感謝您的建議！');
+      closeSuggestionModal();
+    } catch (error) {
+      console.error('Error submitting suggestion:', error);
+      alert('提交失敗：' + error.message);
+    }
+  };
+
+  // 返回頂部
+  window.scrollToTop = function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // 滾動監聽
+  window.addEventListener('scroll', () => {
+    const backToTop = document.getElementById('backToTop');
+    if (window.scrollY > 300) {
+      backToTop.classList.add('show');
+    } else {
+      backToTop.classList.remove('show');
+    }
+  });
+
+</script>
+
+</body>
+</html>
