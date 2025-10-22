@@ -1113,6 +1113,11 @@
 
   // 刪除項目（從編輯模式）
   window.deleteItem = async function(sectionName, itemIndex) {
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
     const input = prompt('確認刪除請輸入「刪除」');
     if (input !== '刪除') {
       if (input !== null) alert('取消刪除');
@@ -1129,6 +1134,11 @@
 
   // 從 Modal 刪除項目
   window.deleteItemFromModal = async function(sectionName, itemIndex) {
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
     const input = prompt('確認刪除請輸入「刪除」');
     if (input !== '刪除') {
       if (input !== null) alert('取消刪除');
@@ -1163,6 +1173,11 @@
 
   // 刪除分類
   window.deleteSection = async function(sectionName) {
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
     const input = prompt(`確定要刪除「${sectionName}」分類嗎？這將刪除該分類下的所有項目。\n\n請輸入「刪除」確認：`);
     if (input !== '刪除') {
       if (input !== null) alert('取消刪除');
