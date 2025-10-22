@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 <title>角色分類管理工具</title>
 <link rel="icon" type="image/png" href="/favicon.png">
-
+ 
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -393,7 +393,7 @@
   }
   .add-btn {
     background: #17a2b8 !important;
-    font-size: 0.9em;
+    font-size: 0.85em;
     padding: 6px 12px;
   }
   .delete-btn {
@@ -533,7 +533,7 @@
 @media (max-width: 768px) {
   body { padding: 10px; }
   .container { padding: 0 5px; }
-  h1 { font-size: 1.5em; margin-top: 60px; }
+  h1 { font-size: 1.5em; margin-top: 0; }
   .admin-bar {
     position: static;
     text-align: center;
@@ -743,8 +743,20 @@
   // 步驟 2：設定 Firestore 資料庫（重要！）
   // 2-1. 在 Firebase Console 左側選單點選「Firestore Database」
   // 2-2. 點選「建立資料庫」
-  // 2-3. 選擇「以測試模式啟動」（或自訂規則）
-  // 2-4. 確保規則允許讀寫（測試模式的規則為：allow read, write: if true;）
+  // 2-3. 選擇位置後，點選「規則」分頁
+  // 2-4. 將規則修改為以下內容（未登入只能讀取，登入後可新增/修改/刪除）：
+  //
+  //      rules_version = '2';
+  //      service cloud.firestore {
+  //        match /databases/{database}/documents {
+  //          match /{document=**} {
+  //            allow read: if true;  // 所有人都可以瀏覽
+  //            allow write: if request.auth != null;  // 只有登入用戶可以修改
+  //          }
+  //        }
+  //      }
+  //
+  // 2-5. 點選「發布」儲存規則
   //
   // 步驟 3：啟用 Authentication
   // 3-1. 在 Firebase Console 左側選單點選「Authentication」
@@ -863,6 +875,10 @@
     document.getElementById('loginAccount').value = '';
     document.getElementById('loginPassword').value = '';
     document.getElementById('loginModal').classList.add('show');
+    // 延遲聚焦，確保 Modal 動畫完成後鍵盤才彈出
+    setTimeout(() => {
+      document.getElementById('loginAccount').focus();
+    }, 300);
   });
 
   // 關閉登入 Modal
@@ -1047,7 +1063,7 @@
 
     if (currentUser) {
       html += `<div class="section-actions">`;
-      html += `<button class="add-btn" onclick="addNewItem('${sectionName}')">➕ 新增項目</button>`;
+      html += `<button class="add-btn" onclick="addNewItem('${sectionName}')">➕ 新增</button>`;
       html += `<button class="delete-section-btn" onclick="deleteSection('${sectionName}')">🗑️ 刪除分類</button>`;
       html += `</div>`;
     }
@@ -1250,6 +1266,11 @@
     document.getElementById('newItemPrompt').value = '';
     document.getElementById('newItemPixaiPrompt').value = '';
     document.getElementById('addItemModal').classList.add('show');
+
+    // 自動聚焦到角色名稱輸入框
+    setTimeout(() => {
+      document.getElementById('newItemName').focus();
+    }, 300);
   };
 
   // 關閉新增項目 Modal
@@ -1327,6 +1348,11 @@
     document.querySelectorAll('.emoji-option').forEach(opt => {
       opt.classList.remove('selected');
     });
+
+    // 自動聚焦到分類名稱輸入框
+    setTimeout(() => {
+      document.getElementById('newCategoryName').focus();
+    }, 300);
   };
 
   // 關閉新增分類 Modal
@@ -1419,6 +1445,11 @@
     document.getElementById('suggestionText').value = '';
     document.getElementById('suggestionModal').classList.add('show');
     closeUserMenu();
+
+    // 自動聚焦到建議輸入框
+    setTimeout(() => {
+      document.getElementById('suggestionText').focus();
+    }, 300);
   };
 
   // 關閉建議 Modal
