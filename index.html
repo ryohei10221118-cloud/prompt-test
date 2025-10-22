@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>角色 Prompt 複製工具</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { 
+    font-family: 'Microsoft JhengHei', Arial, sans-serif; 
+    background: #f8f8f8; 
+    padding: 20px; 
+  }
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  .admin-bar {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .login-btn-small {
+    padding: 8px 16px;
+    background: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.3s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .login-btn-small:hover {
+    background: #357ae8;
+  }
+  .user-info-small {
+    background: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  .user-photo-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+  }
+  .user-name {
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .logout-btn {
+    padding: 6px 12px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .logout-btn:hover {
+    background: #c82333;
+  }
+  .edit-mode-toggle {
+    padding: 8px 16px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .edit-mode-toggle:hover {
+    background: #218838;
+  }
+  h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  .nav-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+  .nav-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  .nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  }
+  .section-title {
+    color: #2c3e50;
+    font-size: 1.5em;
+    margin: 30px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #667eea;
+  }
+  .box { 
+    background: #fff; 
+    border: 1px solid #ccc; 
+    padding: 15px; 
+    margin-bottom: 15px; 
+    border-radius: 6px;
+    transition: box-shadow 0.3s;
+  }
+  .box:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  h2 { 
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    font-size: 1.3em;
+  }
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 1em;
+    color: #555;
+    font-weight: normal;
+  }
+  pre { 
+    background: #f4f4f4; 
+    padding: 10px; 
+    border-radius: 4px; 
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 0.9em;
+    line-height: 1.5;
+    margin: 0;
+  }
+  button { 
+    margin-top: 8px; 
+    padding: 8px 16px; 
+    background: #4CAF50; 
+    color: white; 
+    border: none; 
+    border-radius: 4px; 
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: background 0.3s;
+  }
+  button:hover { 
+    background: #45a049; 
+  }
+  .copied {
+    background: #2196F3 !important;
+  }
+  .style-section {
+    background: #e3f2fd;
+    border-left: 4px solid #2196F3;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+  }
+  .style-section .box {
+    margin-bottom: 10px;
+  }
+  .back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 24px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.3s, opacity 0.3s;
+    z-index: 999;
+    opacity: 0;
+  }
+  .back-to-top.show {
+    display: flex;
+    opacity: 1;
+  }
+  .back-to-top:hover {
+    transform: translateY(-5px);
+  }
+  .edit-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    border: 2px solid #667eea;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
+    resize: vertical;
+  }
+  .edit-controls {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+  }
+  .save-btn {
+    background: #007bff !important;
+  }
+  .cancel-btn {
+    background: #6c757d !important;
+  }
+  .add-character-btn {
+    background: #17a2b8 !important;
+    margin-bottom: 15px;
+  }
+  .delete-btn {
+    background: #dc3545 !important;
+  }
+  .hidden {
+    display: none;
+  }
+  .loading {
+    text-align: center;
+    padding: 20px;
+    font-size: 1em;
+    color: #666;
+  }
+  .error-message {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    padding: 15px;
+    border-radius: 6px;
+    margin: 20px 0;
+    color: #856404;
+  }
+</style>
+</head>
+<body>
+
+<div class="admin-bar">
+  <button class="login-btn-small hidden" id="loginBtn" onclick="googleLogin()">
+    🔐 管理員登入
+  </button>
+  
+  <div class="user-info-small hidden" id="userInfo">
+    <img id="userPhoto" class="user-photo-small" src="" alt="User">
+    <span class="user-name" id="userName"></span>
+    <button class="logout-btn" onclick="logout()">登出</button>
+  </div>
+  
+  <button class="edit-mode-toggle hidden" id="editModeBtn" onclick="toggleEditMode()">進入編輯模式</button>
+</div>
+
+<div class="container">
+  <div class="loading" id="loadingIndicator">載入中... 如果持續載入,請檢查網路連線</div>
+  <div class="error-message hidden" id="errorMessage">
+    ⚠️ 無法連接到 Firebase,正在使用離線模式。你仍可以查看內容,但管理員功能將無法使用。
+  </div>
+  
+  <div id="contentArea" class="hidden">
+    <h1>🎭 角色 Prompt 複製工具</h1>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="scrollToSection('characters')">👤 角色描述</button>
+      <button class="nav-btn" onclick="scrollToSection('styles')">🎨 光影風格</button>
+    </div>
+
+    <h2 class="section-title" id="characters">👤 角色描述</h2>
+    
+    <button class="add-character-btn hidden" id="addCharacterBtn" onclick="addNewCharacter()">➕ 新增角色</button>
+    
+    <div id="charactersContainer"></div>
+
+    <h2 class="section-title" id="styles">🎨 光影風格詞彙</h2>
+
+    <div class="style-section" id="stylesContainer"></div>
+
+    <button class="back-to-top" id="backToTop" onclick="scrollToTop()">↑</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBNMQG8S1qpUwfZ5Zhq26Jo05qtp4BEes",
+    authDomain: "character-prompts.firebaseapp.com",
+    projectId: "character-prompts",
+    storageBucket: "character-prompts.firebasestorage.app",
+    messagingSenderId: "79807154717",
+    appId: "1:79807154717:web:6cbbfb183cba2a05e60af4",
+    measurementId: "G-CXLV8J9ESW"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  let currentUser = null;
+  let isEditMode = false;
+  let charactersData = [];
+  let stylesData = [];
+
+  // 預設資料
+  const defaultCharacters = [
+    { name: "樊季衡", prompt: "male, tanned healthy skin, silvery-blue short hair, naturally falling bangs, very short back hair, blood-red eyes, seductive smile, cross chain earrings, layered metal necklaces, whale bone tattoo on left shoulder, silky open-collar shirt, lean but muscular build, prominent collarbones, defined neck lines" },
+    { name: "樊季昀(大哥)", prompt: "Handsome man, black slicked-back hair, red eyes, black-rimmed glasses, fair slightly tan skin, white shirt with open collar, black suit, restrained sorrow, gold ring on left middle finger" },
+    { name: "戚燁", prompt: "a tall young man with a lean, model-like build, silver-white short messy hair. deep brown eyes, a silver barbell tongue piercing" },
+    { name: "蘇湛", prompt: "a tall young man, a strong and lean build broad shoulders, slightly tousled golden blond hair, short hair, gray eyes, a silver barbell tongue piercing" },
+    { name: "師尊", prompt: "a flamboyant and cunning feng shui master standing front-facing, black shoulder-length tousled hair, sly golden eyes, confident smirk, tassels earrings" },
+    { name: "溫景悅", prompt: "a tall handsome man , black hair with a few natural gray strands, softly parted and slightly wavy, slender big eyes, double eyelids, thin lips, a mole below the left eye" },
+    { name: "楚汐", prompt: "ultra-short clean haircut, no bangs, short pompadour hairstyle, soft beige-brown gradient hair color, slightly wavy texture, narrow black eyes, black irises, one raised eyebrow, thin lips, one-sided smirk, asymmetric cocky grin, gold thin-rimmed glasses slipping down nose, wearing black and white street-style jacket, silver rings, delicate semi-realistic style, soft lighting", pixaiPrompt: "ultra-short clean haircut, no bangs, The Mellow Beige hair,slightly wavy texture,black irises eyes, thin lips, one raised eyebrow,one-sided smirk, asymmetric cocky grin gold thin-rimmed glasses slipping down nose, wearing black and white street-style jacket, silver rings" },
+    { name: "祈盞", prompt: "black long hair tied in elegant ancient bun with loose strands, vivid purple eyes" },
+    { name: "孜蘊", prompt: "ultra wide-angle shot, full-body view, anime-style illustration of a young man with short reddish-brown messy hair, slightly tousled strands, sharp light-blue eyes. he has a confident, arrogant expression and a clean, handsome face with a mischievous smirk. wearing a black leather jacket, he lounges half-lying on a sofa in a relaxed but defiant pose, holding a gun casually in one hand. cinematic lighting, high detail, dynamic composition, dramatic atmosphere" }
+  ];
+
+  const defaultStyles = [
+    { name: "半寫實+電影光斑｜防出真人+人物打光", prompt: "delicate semi-realistic style" },
+    { name: "半寫實電影感", prompt: "semi-realistic cinematic tone" },
+    { name: "明亮光｜防顏色灰暗", prompt: "clean and bright composition, rich color depth" },
+    { name: "冷色調｜二哥專用詞 或 陰暗冷酷風", prompt: "cool tone lighting, smoky atmosphere" },
+    { name: "底片風｜顆粒感較重", prompt: "film-like grain and soft glow" },
+    { name: "中遠景構圖", prompt: "medium shot composition" }
+  ];
+
+  // 初始載入資料
+  async function init() {
+    let hasError = false;
+    try {
+      console.log('開始載入資料...');
+      await loadData();
+      console.log('資料載入完成');
+      renderContent();
+    } catch (error) {
+      console.error('初始化失敗:', error);
+      hasError = true;
+      // 即使載入失敗,也顯示預設內容
+      charactersData = defaultCharacters;
+      stylesData = defaultStyles;
+      renderContent();
+      document.getElementById('errorMessage').classList.remove('hidden');
+    } finally {
+      document.getElementById('loadingIndicator').classList.add('hidden');
+      document.getElementById('contentArea').classList.remove('hidden');
+      if (!hasError) {
+        document.getElementById('loginBtn').classList.remove('hidden');
+      }
+    }
+  }
+
+  window.googleLogin = async function() {
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      alert('登入失敗: ' + error.message);
+    }
+  };
+
+  window.logout = async function() {
+    try {
+      isEditMode = false;
+      await signOut(auth);
+      renderContent();
+    } catch (error) {
+      alert('登出失敗: ' + error.message);
+    }
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      currentUser = user;
+      document.getElementById('loginBtn').classList.add('hidden');
+      document.getElementById('userInfo').classList.remove('hidden');
+      document.getElementById('editModeBtn').classList.remove('hidden');
+      document.getElementById('userName').textContent = user.displayName;
+      document.getElementById('userPhoto').src = user.photoURL;
+    } else {
+      currentUser = null;
+      document.getElementById('loginBtn').classList.remove('hidden');
+      document.getElementById('userInfo').classList.add('hidden');
+      document.getElementById('editModeBtn').classList.add('hidden');
+      document.getElementById('addCharacterBtn').classList.add('hidden');
+    }
+  });
+
+  async function loadData() {
+    try {
+      const docRef = doc(db, 'prompts', 'data');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        charactersData = data.characters || defaultCharacters;
+        stylesData = data.styles || defaultStyles;
+        console.log('資料載入成功');
+      } else {
+        console.log('資料庫中沒有資料,使用預設資料');
+        charactersData = defaultCharacters;
+        stylesData = defaultStyles;
+      }
+    } catch (error) {
+      console.error('載入資料失敗:', error);
+      // 發生錯誤時使用預設資料
+      charactersData = defaultCharacters;
+      stylesData = defaultStyles;
+    }
+  }
+
+  async function saveData() {
+    try {
+      const docRef = doc(db, 'prompts', 'data');
+      await setDoc(docRef, {
+        characters: charactersData,
+        styles: stylesData,
+        lastUpdated: new Date().toISOString()
+      });
+      alert('保存成功!');
+    } catch (error) {
+      alert('保存失敗: ' + error.message);
+    }
+  }
+
+  function renderContent() {
+    renderCharacters();
+    renderStyles();
+  }
+
+  function renderCharacters() {
+    const container = document.getElementById('charactersContainer');
+    container.innerHTML = '';
+    
+    charactersData.forEach((char, index) => {
+      const box = document.createElement('div');
+      box.className = 'box';
+      
+      let html = `<h2>${char.name}</h2>`;
+      
+      if (isEditMode) {
+        html += `
+          <textarea class="edit-textarea" id="char-${index}">${char.prompt}</textarea>
+          ${char.pixaiPrompt ? `
+            <h3 style="margin-top: 15px; padding-top: 15px; border-top: 2px dashed #ddd;">
+              <span style="background: #FF6B9D; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">pixAI 專用</span>
+            </h3>
+            <textarea class="edit-textarea" id="char-pixai-${index}">${char.pixaiPrompt}</textarea>
+          ` : ''}
+          <div class="edit-controls">
+            <button class="save-btn" onclick="saveCharacter(${index})">💾 保存</button>
+            <button class="delete-btn" onclick="deleteCharacter(${index})">🗑️ 刪除</button>
+          </div>
+        `;
+      } else {
+        html += `
+          <pre id="char-${index}">${char.prompt}</pre>
+          <button onclick="copyText('char-${index}', this)">複製</button>
+        `;
+        
+        if (char.pixaiPrompt) {
+          html += `
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 2px dashed #ddd;">
+              <h3 style="margin: 0 0 8px 0; color: #FF6B9D; font-weight: bold; font-size: 1em;">
+                <span style="background: #FF6B9D; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">pixAI 專用</span>
+              </h3>
+              <pre id="char-pixai-${index}">${char.pixaiPrompt}</pre>
+              <button onclick="copyText('char-pixai-${index}', this)">複製</button>
+            </div>
+          `;
+        }
+      }
+      
+      box.innerHTML = html;
+      container.appendChild(box);
+    });
+  }
+
+  function renderStyles() {
+    const container = document.getElementById('stylesContainer');
+    container.innerHTML = '';
+    
+    stylesData.forEach((style, index) => {
+      const box = document.createElement('div');
+      box.className = 'box';
+      
+      let html = `<h3>${style.name}</h3>`;
+      
+      if (isEditMode) {
+        html += `
+          <input type="text" class="edit-textarea" style="min-height: auto;" id="style-name-${index}" value="${style.name}" placeholder="風格名稱">
+          <textarea class="edit-textarea" id="style-${index}">${style.prompt}</textarea>
+          <div class="edit-controls">
+            <button class="save-btn" onclick="saveStyle(${index})">💾 保存</button>
+            <button class="delete-btn" onclick="deleteStyle(${index})">🗑️ 刪除</button>
+          </div>
+        `;
+      } else {
+        html += `
+          <pre id="style-${index}">${style.prompt}</pre>
+          <button onclick="copyText('style-${index}', this)">複製</button>
+        `;
+      }
+      
+      box.innerHTML = html;
+      container.appendChild(box);
+    });
+  }
+
+  window.toggleEditMode = function() {
+    if (!currentUser) {
+      alert('請先登入!');
+      return;
+    }
+    
+    isEditMode = !isEditMode;
+    const btn = document.getElementById('editModeBtn');
+    const addBtn = document.getElementById('addCharacterBtn');
+    
+    if (isEditMode) {
+      btn.textContent = '退出編輯模式';
+      btn.style.background = '#ffc107';
+      addBtn.classList.remove('hidden');
+    } else {
+      btn.textContent = '進入編輯模式';
+      btn.style.background = '#28a745';
+      addBtn.classList.add('hidden');
+    }
+    
+    renderContent();
+  };
+
+  window.saveCharacter = async function(index) {
+    const prompt = document.getElementById(`char-${index}`).value;
+    const pixaiEl = document.getElementById(`char-pixai-${index}`);
+    
+    charactersData[index].prompt = prompt;
+    if (pixaiEl) {
+      charactersData[index].pixaiPrompt = pixaiEl.value;
+    }
+    
+    await saveData();
+    renderContent();
+  };
+
+  window.deleteCharacter = async function(index) {
+    if (confirm('確定要刪除此角色嗎?')) {
+      charactersData.splice(index, 1);
+      await saveData();
+      renderContent();
+    }
+  };
+
+  window.saveStyle = async function(index) {
+    const name = document.getElementById(`style-name-${index}`).value;
+    const prompt = document.getElementById(`style-${index}`).value;
+    
+    stylesData[index].name = name;
+    stylesData[index].prompt = prompt;
+    
+    await saveData();
+    renderContent();
+  };
+
+  window.deleteStyle = async function(index) {
+    if (confirm('確定要刪除此風格嗎?')) {
+      stylesData.splice(index, 1);
+      await saveData();
+      renderContent();
+    }
+  };
+
+  window.addNewCharacter = function() {
+    const name = prompt('請輸入角色名稱:');
+    if (name) {
+      charactersData.push({ name: name, prompt: '' });
+      renderContent();
+    }
+  };
+
+  window.copyText = function(id, buttonElement) {
+    const text = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const originalText = buttonElement.innerText;
+      buttonElement.innerText = '已複製 ✓';
+      buttonElement.classList.add('copied');
+      
+      setTimeout(() => {
+        buttonElement.innerText = originalText;
+        buttonElement.classList.remove('copied');
+      }, 2000);
+    });
+  };
+
+  window.scrollToSection = function(sectionId) {
+    const element = document.getElementById(sectionId);
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  window.scrollToTop = function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  window.addEventListener('scroll', function() {
+    const backToTopBtn = document.getElementById('backToTop');
+    if (window.pageYOffset > 300) {
+      backToTopBtn.classList.add('show');
+    } else {
+      backToTopBtn.classList.remove('show');
+    }
+  });
+
+  // 初始化
+  init();
+</script>
+
+</body>
+</html>
