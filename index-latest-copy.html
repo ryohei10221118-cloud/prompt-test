@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>角色分類管理工具</title>
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Microsoft JhengHei', Arial, sans-serif;
+    background: #f8f8f8;
+    padding: 20px;
+  }
+  .container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 15px;
+  }
+  .admin-bar {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+  }
+  .user-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid #667eea;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+  }
+  .user-avatar:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .login-btn-small {
+    padding: 8px 16px;
+    background: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.3s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .login-btn-small:hover {
+    background: #357ae8;
+  }
+  .user-menu {
+    display: none;
+    position: absolute;
+    top: 55px;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    padding: 10px;
+    min-width: 200px;
+    z-index: 1001;
+  }
+  .user-menu.show {
+    display: block;
+    animation: slideDown 0.3s;
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .user-menu-header {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
+  }
+  .user-menu-name {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 0.95em;
+  }
+  .user-menu-email {
+    font-size: 0.8em;
+    color: #999;
+    margin-top: 2px;
+  }
+  .user-menu-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9em;
+    margin: 5px 0;
+  }
+  .user-menu-item:hover {
+    background: #f5f5f5;
+  }
+  .user-menu-item.edit { color: #28a745; }
+  .user-menu-item.suggest { color: #17a2b8; }
+  .user-menu-item.logout { color: #dc3545; }
+  h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  .nav-buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 30px;
+    align-items: center;
+  }
+  .nav-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  .nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  }
+  .add-category-btn-inline {
+    padding: 12px 24px;
+    background: #6f42c1 !important;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  .add-category-btn-inline:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    background: #5a32a3 !important;
+  }
+  .section-title {
+    color: #2c3e50;
+    font-size: 1.5em;
+    margin: 30px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #667eea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .section-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .box { 
+    background: #fff; 
+    border: 1px solid #ccc; 
+    padding: 15px; 
+    margin-bottom: 15px; 
+    border-radius: 6px;
+    transition: box-shadow 0.3s;
+  }
+  .box:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  h2 { 
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    font-size: 1.3em;
+  }
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 1em;
+    color: #555;
+    font-weight: normal;
+  }
+  button { 
+    margin-top: 8px; 
+    padding: 8px 16px; 
+    background: #4CAF50; 
+    color: white; 
+    border: none; 
+    border-radius: 4px; 
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: background 0.3s;
+  }
+  button:hover { 
+    background: #45a049; 
+  }
+  .copied {
+    background: #2196F3 !important;
+  }
+  .section-container {
+    margin-bottom: 30px;
+  }
+  .items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+    gap: 10px;
+    margin-top: 15px;
+  }
+  .item-card {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+  }
+  .item-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    transform: translateY(-2px);
+  }
+  .item-card-name {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 1em;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    animation: fadeIn 0.3s;
+  }
+  .modal.show {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-content {
+    background-color: #fefefe;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: min(600px, 90vw);
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    animation: slideIn 0.3s;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #667eea;
+  }
+  .modal-title {
+    font-size: 1.5em;
+    color: #2c3e50;
+    font-weight: bold;
+  }
+  .close-btn {
+    background: #dc3545 !important;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+  }
+  .close-btn:hover {
+    background: #c82333 !important;
+  }
+  .modal-body {
+    margin: 20px 0;
+  }
+  .modal-prompt {
+    background: #f4f4f4;
+    padding: 15px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: monospace;
+    font-size: 0.9em;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .copy-modal-btn {
+    background: #4CAF50 !important;
+    padding: 10px 24px;
+    font-size: 1em;
+  }
+  .pixai-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px dashed #FF6B9D;
+  }
+  .pixai-badge {
+    background: #FF6B9D;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+  .back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 24px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.3s, opacity 0.3s;
+    z-index: 999;
+    opacity: 0;
+  }
+  .back-to-top.show {
+    display: flex;
+    opacity: 1;
+  }
+  .back-to-top:hover {
+    transform: translateY(-5px);
+  }
+  .edit-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    border: 2px solid #667eea;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
+    resize: vertical;
+  }
+  .edit-controls {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+  }
+  .save-btn {
+    background: #007bff !important;
+  }
+  .add-btn {
+    background: #17a2b8 !important;
+    font-size: 0.9em;
+    padding: 6px 12px;
+  }
+  .delete-btn {
+    background: #dc3545 !important;
+  }
+  .delete-section-btn {
+    background: #dc3545 !important;
+    font-size: 0.85em;
+    padding: 6px 12px;
+  }
+  .cancel-btn {
+    background: #6c757d !important;
+  }
+  .hidden {
+    display: none;
+  }
+  .loading {
+    text-align: center;
+    padding: 20px;
+    font-size: 1em;
+    color: #666;
+  }
+  .error-message {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    padding: 15px;
+    border-radius: 6px;
+    margin: 20px 0;
+    color: #856404;
+  }
+  input.edit-input {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid #667eea;
+    border-radius: 4px;
+    font-size: 0.95em;
+    margin-bottom: 5px;
+  }
+  .category-input-group {
+    margin-bottom: 15px;
+  }
+  .category-input-label {
+    display: block;
+    text-align: left;
+    margin-bottom: 5px;
+    color: #555;
+    font-size: 0.9em;
+  }
+  .category-input-label.optional {
+    color: #999;
+  }
+  .category-input-label.optional::after {
+    content: " (選填)";
+    color: #999;
+    font-size: 0.85em;
+  }
+  .emoji-input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .emoji-input {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #667eea;
+    border-radius: 4px;
+    font-size: 1.2em;
+    text-align: center;
+  }
+  .emoji-preview {
+    font-size: 32px;
+    min-width: 50px;
+    text-align: center;
+  }
+  .emoji-picker-container {
+    margin-top: 10px;
+  }
+  .emoji-picker-toggle {
+    background: #f0f0f0 !important;
+    color: #333 !important;
+    font-size: 0.85em;
+    padding: 6px 12px;
+    margin: 0;
+  }
+  .emoji-picker {
+    display: none;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    margin: 10px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+  .emoji-picker.show {
+    display: grid;
+  }
+  .emoji-option {
+    font-size: 24px;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    text-align: center;
+    background: white;
+    border: 2px solid transparent;
+  }
+  .emoji-option:hover {
+    background: #e3f2fd;
+    transform: scale(1.15);
+  }
+  .emoji-option.selected {
+    border-color: #667eea;
+    background: #e8eaf6;
+  }
+  .suggestion-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 10px;
+    border: 2px solid #17a2b8;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.9em;
+    resize: vertical;
+    margin-bottom: 15px;
+  }
+
+/* 頁面整體設定 */
+body {
+  margin: 0;
+  font-family: "Noto Sans TC", sans-serif;
+  background: var(--bg-color);
+  color: #222;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 頁首 */
+header {
+  width: 100%;
+  text-align: center;
+  background: var(--primary);
+  color: white;
+  padding: 18px 10px;
+  font-size: clamp(1.3em, 2.5vw, 1.8em);
+  font-weight: bold;
+  letter-spacing: 1px;
+  box-shadow: 0 3px 10px var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* 導覽列 */
+.navbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  justify-content: center;
+  background: rgba(255,255,255,0.45);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 6px var(--shadow);
+  width: 100%;
+}
+.navbar button {
+  flex: 0 1 auto;
+  border: none;
+  background: var(--accent);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.navbar button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* 分類容器 */
+.category {
+  width: 95%;
+  max-width: 1000px;
+  background: var(--card-bg);
+  margin: 18px auto;
+  border-radius: 16px;
+  box-shadow: 0 3px 10px var(--shadow);
+  padding: 16px;
+}
+
+/* 分類標題 */
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: var(--accent);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.category-header button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+.category-header button:hover {
+  opacity: 0.9;
+}
+
+/* 卡片區塊 */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.card {
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 3px 6px var(--shadow);
+  padding: 14px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px var(--shadow);
+}
+.card-title {
+  font-weight: bold;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.card-desc {
+  font-size: 0.95em;
+  color: var(--gray-text);
+  background: #f6f6ff;
+  padding: 8px 10px;
+  border-radius: 10px;
+  min-height: 50px;
+}
+
+/* 彈窗通用 */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.45);
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+.modal-content {
+  background: white;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px var(--shadow);
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  position: relative;
+}
+.modal-content h3 {
+  margin-top: 0;
+  color: var(--accent);
+}
+.modal-content input, .modal-content textarea {
+  width: 90%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 1em;
+}
+.modal-content button {
+  margin-top: 15px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: #888;
+}
+.close-btn:hover { color: #000; }
+
+/* 小建議按鈕 */
+#suggestionBtn {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 55px;
+  height: 55px;
+  box-shadow: 0 4px 10px var(--shadow);
+  font-size: 1.3em;
+  cursor: pointer;
+  z-index: 150;
+  transition: 0.3s;
+}
+#suggestionBtn:hover { transform: scale(1.05); }
+
+/* 回頂按鈕 */
+#scrollTopBtn {
+  position: fixed;
+  bottom: 90px;
+  right: 30px;
+  background: #6a9cff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  font-size: 1.1em;
+  cursor: pointer;
+  display: none;
+  box-shadow: 0 4px 10px var(--shadow);
+  transition: 0.3s;
+  z-index: 150;
+}
+#scrollTopBtn:hover { transform: scale(1.1); }
+
+/* 登入窗 */
+#loginModal .modal-content {
+  max-width: 360px;
+}
+#loginModal input {
+  width: 100%;
+  margin-bottom: 10px;
+}
+#loginModal button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* 平板適應 */
+@media (max-width: 1024px) {
+  body { padding: 15px; }
+  .container { padding: 0 10px; }
+  h1 { font-size: 1.8em; }
+}
+
+/* 手機適應 */
+@media (max-width: 768px) {
+  body { padding: 10px; }
+  .container { padding: 0 5px; }
+  h1 { font-size: 1.5em; margin-top: 60px; }
+  .admin-bar {
+    position: static;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  .nav-btn, .add-category-btn-inline {
+    padding: 10px 16px;
+    font-size: 0.9em;
+  }
+  .section-title {
+    font-size: 1.2em;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .items-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+    gap: 8px;
+  }
+  .modal-content {
+    width: 95%;
+    padding: 20px;
+    max-height: 90vh;
+  }
+  .user-avatar { width: 40px; height: 40px; }
+}
+
+@media (max-width: 480px) {
+  .items-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 120px), 1fr));
+  }
+  .nav-buttons { gap: 8px; }
+  .modal-content { padding: 15px; }
+}
+</style>
+
+  </head>
+<body>
+
+<div class="admin-bar">
+  <button class="login-btn-small hidden" id="loginBtn">
+    🔐 登入
+  </button>
+
+  <div class="hidden" id="userAvatarContainer">
+    <div id="userAvatar" class="user-avatar" onclick="toggleUserMenu()">
+      <span id="userAvatarText">👤</span>
+    </div>
+    <div class="user-menu" id="userMenu">
+      <div class="user-menu-header">
+        <div class="user-menu-name" id="menuUserName"></div>
+        <div class="user-menu-email" id="menuUserEmail"></div>
+      </div>
+      <div class="user-menu-item edit" onclick="toggleEditModeFromMenu()">
+        <span>✏️</span>
+        <span id="editModeText">進入編輯模式</span>
+      </div>
+      <div class="user-menu-item suggest" onclick="openSuggestionModal()">
+        <span>💡</span>
+        <span>小小建議</span>
+      </div>
+      <div class="user-menu-item logout" onclick="logout()">
+        <span>🚪</span>
+        <span>登出</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="loading" id="loadingIndicator">載入中...</div>
+  <div class="error-message hidden" id="errorMessage">
+    ⚠️ 無法連接到 Firebase，正在使用離線模式。
+  </div>
+
+  <div id="contentArea" class="hidden">
+    <h1>🎭 Prompt 管理系統</h1>
+
+    <div class="nav-buttons" id="navButtons"></div>
+
+    <div id="sectionsContainer"></div>
+
+    <button class="back-to-top" id="backToTop" onclick="scrollToTop()">↑</button>
+  </div>
+</div>
+
+<div id="itemModal" class="modal" onclick="closeModalOnBackdrop(event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle"></h2>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div id="addCategoryModal" class="modal" onclick="closeAddCategoryModalOnBackdrop(event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">➕ 新增分類</h2>
+      <button class="close-btn" onclick="closeAddCategoryModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="category-input-group">
+        <label class="category-input-label">分類名稱</label>
+        <input type="text" id="newCategoryName" class="edit-input" placeholder="例如: 場景、道具、特效..." />
+      </div>
+      <div class="category-input-group">
+        <label class="category-input-label optional">選擇圖示</label>
+        <div class="emoji-input-wrapper">
+          <input type="text" id="emojiInput" class="emoji-input" placeholder="輸入或選擇 emoji" maxlength="2" oninput="updateEmojiFromInput()" />
+          <div class="emoji-preview" id="emojiPreview">📁</div>
+        </div>
+        <div class="emoji-picker-container">
+          <button class="emoji-picker-toggle" onclick="toggleEmojiPicker()">📋 顯示常用圖示</button>
+          <div class="emoji-picker" id="emojiPicker"></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="save-btn" onclick="confirmAddCategory()">✓ 確定</button>
+        <button class="cancel-btn" onclick="closeAddCategoryModal()">✕ 取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="loginModal" class="modal" onclick="closeLoginModalOnBackdrop(event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">🔐 登入 / 註冊</h2>
+      <button class="close-btn" onclick="closeLoginModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">請輸入帳號和密碼</p>
+      <input type="text" id="loginAccount" class="edit-input" placeholder="帳號" style="margin-bottom: 10px;" />
+      <input type="password" id="loginPassword" class="edit-input" placeholder="密碼" />
+      <div class="modal-actions">
+        <button class="save-btn" onclick="performLogin()">✓ 登入 / 註冊</button>
+        <button class="cancel-btn" onclick="closeLoginModal()">✕ 取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="suggestionModal" class="modal" onclick="closeSuggestionModalOnBackdrop(event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">💡 小小建議</h2>
+      <button class="close-btn" onclick="closeSuggestionModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">有任何想法或建議都歡迎告訴我們!</p>
+      <textarea id="suggestionText" class="suggestion-textarea" placeholder="請輸入您的建議..."></textarea>
+      <div class="modal-actions">
+        <button class="save-btn" onclick="submitSuggestion()">📤 送出</button>
+        <button class="cancel-btn" onclick="closeSuggestionModal()">✕ 取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { getFirestore, doc, getDoc, setDoc, collection, addDoc, query, orderBy, getDocs, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  // ⚠️ 重要：請將下方的 Firebase 設定替換為您自己的專案設定
+  // 請前往 Firebase Console (https://console.firebase.google.com/)
+  // 1. 選擇您的專案或建立新專案
+  // 2. 前往「專案設定」→「一般」→「您的應用程式」
+  // 3. 選擇網頁應用程式，複製 firebaseConfig 設定並替換下方內容
+  const firebaseConfig = {
+    apiKey: "AIzaSyBNMQG8S1qpUwfZ5Zhq26Jo05qitp4BEes",
+    authDomain: "character-prompts.firebaseapp.com",
+    projectId: "character-prompts",
+    storageBucket: "character-prompts.firebasestorage.app",
+    messagingSenderId: "798087154717",
+    appId: "1:798087154717:web:6cbbfb183cba2a05e60af4",
+    measurementId: "G-CXLV8J9ESW"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let currentUser = null;
+  let isEditMode = false;
+  let allData = {};
+  let selectedEmoji = '📁';
+
+  // 將帳號轉換為 email 格式
+  function accountToEmail(account) {
+    return `${account}@prompt.local`;
+  }
+
+  // 從 email 提取帳號
+  function emailToAccount(email) {
+    return email.replace('@prompt.local', '');
+  }
+
+  const commonEmojis = [
+    '👤', '🎭', '🎨', '🌟', '✨', '💫', '🔮', '🎪',
+    '🏞️', '🌅', '🌆', '🌃', '🌉', '🏙️', '🌇', '🌄',
+    '📸', '🎬', '🎥', '📹', '🎞️', '📷', '📱', '💻',
+    '🎮', '🕹️', '🎲', '🎯', '🎪', '🎨', '🖌️', '✏️',
+    '📝', '📋', '📌', '📍', '🔖', '📁', '📂', '🗂️',
+    '💡', '🔦', '🕯️', '💎', '💍', '👑', '🎩', '🎓'
+  ];
+
+  const defaultData = {
+    "角色描述": {
+      icon: "👤",
+      createdAt: 1,
+      items: [
+        { name: "樊季衡", prompt: "male, tanned healthy skin, silvery-blue short hair, naturally falling bangs, very short back hair, blood-red eyes, seductive smile, cross chain earrings, layered metal necklaces, whale bone tattoo on left shoulder, silky open-collar shirt, lean but muscular build, prominent collarbones, defined neck lines" },
+        { name: "樊季昀(大哥)", prompt: "Handsome man, black slicked-back hair, red eyes, black-rimmed glasses, fair slightly tan skin, white shirt with open collar, black suit, restrained sorrow, gold ring on left middle finger" },
+        { name: "戚燁", prompt: "a tall young man with a lean, model-like build, silver-white short messy hair. deep brown eyes, a silver barbell tongue piercing" },
+        { name: "蘇湛", prompt: "a tall young man, a strong and lean build broad shoulders, slightly tousled golden blond hair, short hair, gray eyes, a silver barbell tongue piercing" },
+        { name: "師尊", prompt: "a flamboyant and cunning feng shui master standing front-facing, black shoulder-length tousled hair, sly golden eyes, confident smirk, tassels earrings" },
+        { name: "溫景悅", prompt: "a tall handsome man , black hair with a few natural gray strands, softly parted and slightly wavy, slender big eyes, double eyelids, thin lips, a mole below the left eye" },
+        { name: "楚汐", prompt: "ultra-short clean haircut, no bangs, short pompadour hairstyle, soft beige-brown gradient hair color, slightly wavy texture, narrow black eyes, black irises, one raised eyebrow, thin lips, one-sided smirk, asymmetric cocky grin, gold thin-rimmed glasses slipping down nose, wearing black and white street-style jacket, silver rings, delicate semi-realistic style, soft lighting", pixaiPrompt: "ultra-short clean haircut, no bangs, The Mellow Beige hair,slightly wavy texture,black irises eyes, thin lips, one raised eyebrow,one-sided smirk, asymmetric cocky grin gold thin-rimmed glasses slipping down nose, wearing black and white street-style jacket, silver rings" },
+        { name: "祈盞", prompt: "black long hair tied in elegant ancient bun with loose strands, vivid purple eyes" },
+        { name: "孜蘊", prompt: "ultra wide-angle shot, full-body view, black short hair, tousled messy strands, deep purple-red eyes" }
+      ]
+    }
+  };
+
+  // 初始化
+  window.addEventListener('DOMContentLoaded', () => {
+    initializeEmojiPicker();
+    checkAuthAndLoadData();
+  });
+
+  // 監聽認證狀態
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    updateUIForAuth();
+  });
+
+  // 檢查認證並載入資料
+  async function checkAuthAndLoadData() {
+    try {
+      await loadData();
+      document.getElementById('loadingIndicator').classList.add('hidden');
+      document.getElementById('contentArea').classList.remove('hidden');
+    } catch (error) {
+      console.error('Error loading data:', error);
+      document.getElementById('loadingIndicator').classList.add('hidden');
+      document.getElementById('errorMessage').classList.remove('hidden');
+      document.getElementById('contentArea').classList.remove('hidden');
+      allData = defaultData;
+      renderUI();
+    }
+  }
+
+  // 更新認證相關 UI
+  function updateUIForAuth() {
+    const loginBtn = document.getElementById('loginBtn');
+    const avatarContainer = document.getElementById('userAvatarContainer');
+
+    if (currentUser) {
+      loginBtn.classList.add('hidden');
+      avatarContainer.classList.remove('hidden');
+
+      const account = emailToAccount(currentUser.email);
+      document.getElementById('userAvatarText').textContent = account.charAt(0).toUpperCase();
+      document.getElementById('menuUserName').textContent = account;
+      document.getElementById('menuUserEmail').textContent = '帳號 ID';
+    } else {
+      loginBtn.classList.remove('hidden');
+      avatarContainer.classList.add('hidden');
+      if (isEditMode) {
+        isEditMode = false;
+        renderUI();
+      }
+    }
+  }
+
+  // 開啟登入 Modal
+  document.getElementById('loginBtn').addEventListener('click', () => {
+    document.getElementById('loginAccount').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginModal').classList.add('show');
+  });
+
+  // 關閉登入 Modal
+  window.closeLoginModal = function() {
+    document.getElementById('loginModal').classList.remove('show');
+  };
+
+  // 點擊背景關閉登入 Modal
+  window.closeLoginModalOnBackdrop = function(event) {
+    if (event.target === document.getElementById('loginModal')) {
+      closeLoginModal();
+    }
+  };
+
+  // 執行登入
+  window.performLogin = async function() {
+    const account = document.getElementById('loginAccount').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    if (!account || !password) {
+      alert('請輸入帳號和密碼');
+      return;
+    }
+
+    const email = accountToEmail(account);
+
+    try {
+      // 先嘗試登入
+      await signInWithEmailAndPassword(auth, email, password);
+      alert('登入成功！');
+      closeLoginModal();
+    } catch (error) {
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        // 如果用戶不存在，嘗試註冊
+        try {
+          await createUserWithEmailAndPassword(auth, email, password);
+          alert('註冊成功並已登入！');
+          closeLoginModal();
+        } catch (registerError) {
+          console.error('Register error:', registerError);
+          alert('註冊失敗：' + registerError.message);
+        }
+      } else if (error.code === 'auth/wrong-password') {
+        alert('密碼錯誤，請重試');
+      } else {
+        console.error('Login error:', error);
+        alert('登入失敗：' + error.message);
+      }
+    }
+  };
+
+  // 登出
+  window.logout = async function() {
+    try {
+      await signOut(auth);
+      closeUserMenu();
+      alert('已登出');
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('登出失敗，請重試');
+    }
+  };
+
+  // 切換使用者選單
+  window.toggleUserMenu = function() {
+    const menu = document.getElementById('userMenu');
+    menu.classList.toggle('show');
+  };
+
+  // 關閉使用者選單
+  function closeUserMenu() {
+    document.getElementById('userMenu').classList.remove('show');
+  }
+
+  // 點擊外部關閉選單
+  document.addEventListener('click', (e) => {
+    const avatarContainer = document.getElementById('userAvatarContainer');
+    const userMenu = document.getElementById('userMenu');
+    if (!avatarContainer.contains(e.target)) {
+      userMenu.classList.remove('show');
+    }
+  });
+
+  // 從選單切換編輯模式
+  window.toggleEditModeFromMenu = function() {
+    if (!currentUser) return;
+    isEditMode = !isEditMode;
+    document.getElementById('editModeText').textContent = isEditMode ? '離開編輯模式' : '進入編輯模式';
+    renderUI();
+    closeUserMenu();
+  };
+
+  // 載入資料
+  async function loadData() {
+    try {
+      const docRef = doc(db, 'prompts', 'main');
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        allData = docSnap.data().data || defaultData;
+      } else {
+        allData = defaultData;
+      }
+      renderUI();
+    } catch (error) {
+      console.error('Error loading data:', error);
+      allData = defaultData;
+      renderUI();
+      throw error;
+    }
+  }
+
+  // 儲存資料
+  async function saveData() {
+    if (!currentUser) {
+      alert('請先登入');
+      return false;
+    }
+
+    try {
+      const docRef = doc(db, 'prompts', 'main');
+      await setDoc(docRef, {
+        data: allData,
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser.email
+      });
+      return true;
+    } catch (error) {
+      console.error('Error saving data:', error);
+      alert('儲存失敗：' + error.message);
+      return false;
+    }
+  }
+
+  // 渲染 UI
+  function renderUI() {
+    renderNavigationButtons();
+    renderSections();
+  }
+
+  // 渲染導航按鈕
+  function renderNavigationButtons() {
+    const container = document.getElementById('navButtons');
+    const sortedSections = Object.entries(allData).sort((a, b) => {
+      return (a[1].createdAt || 0) - (b[1].createdAt || 0);
+    });
+
+    let html = '';
+    sortedSections.forEach(([name, section]) => {
+      const icon = section.icon || '📁';
+      html += `<button class="nav-btn" onclick="scrollToSection('${name}')">${icon} ${name}</button>`;
+    });
+
+    if (currentUser) {
+      html += `<button class="add-category-btn-inline" onclick="openAddCategoryModal()">➕ 新增分類</button>`;
+    }
+
+    container.innerHTML = html;
+  }
+
+  // 渲染所有分類
+  function renderSections() {
+    const container = document.getElementById('sectionsContainer');
+    const sortedSections = Object.entries(allData).sort((a, b) => {
+      return (a[1].createdAt || 0) - (b[1].createdAt || 0);
+    });
+
+    let html = '';
+    sortedSections.forEach(([name, section]) => {
+      html += renderSection(name, section);
+    });
+
+    container.innerHTML = html;
+  }
+
+  // 渲染單一分類
+  function renderSection(sectionName, section) {
+    const icon = section.icon || '📁';
+    let html = `<div class="section-container" id="section-${sectionName}">`;
+    html += `<div class="section-title">`;
+    html += `<span>${icon} ${sectionName}</span>`;
+
+    if (currentUser) {
+      html += `<div class="section-actions">`;
+      html += `<button class="add-btn" onclick="addNewItem('${sectionName}')">➕ 新增項目</button>`;
+      html += `<button class="delete-section-btn" onclick="deleteSection('${sectionName}')">🗑️ 刪除分類</button>`;
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+    html += `<div class="items-grid">`;
+
+    section.items.forEach((item, index) => {
+      if (isEditMode && currentUser) {
+        html += renderItemEditMode(sectionName, item, index);
+      } else {
+        html += renderItemViewMode(sectionName, item, index);
+      }
+    });
+
+    html += `</div></div>`;
+    return html;
+  }
+
+  // 渲染項目（檢視模式）
+  function renderItemViewMode(sectionName, item, index) {
+    return `
+      <div class="item-card" onclick="openItemModal('${sectionName}', ${index})">
+        <div class="item-card-name">${item.name}</div>
+      </div>
+    `;
+  }
+
+  // 渲染項目（編輯模式）
+  function renderItemEditMode(sectionName, item, index) {
+    return `
+      <div class="box">
+        <h2>${item.name}</h2>
+        <textarea class="edit-textarea" id="textarea-${sectionName}-${index}">${item.prompt}</textarea>
+        ${item.pixaiPrompt ? `
+        <div class="pixai-section">
+          <span class="pixai-badge">PixAI 版本</span>
+          <textarea class="edit-textarea" id="pixai-${sectionName}-${index}">${item.pixaiPrompt}</textarea>
+        </div>
+        ` : ''}
+        <div class="edit-controls">
+          <button class="save-btn" onclick="saveItem('${sectionName}', ${index})">💾 儲存</button>
+          <button class="delete-btn" onclick="deleteItem('${sectionName}', ${index})">🗑️ 刪除</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // 開啟項目 Modal
+  window.openItemModal = function(sectionName, itemIndex) {
+    const item = allData[sectionName].items[itemIndex];
+    const modal = document.getElementById('itemModal');
+    document.getElementById('modalTitle').textContent = item.name;
+
+    let bodyHtml = `
+      <div class="modal-prompt">${item.prompt}</div>
+      <div class="modal-actions">
+        <button class="copy-modal-btn" onclick="copyFromModal('${sectionName}', ${itemIndex}, 'prompt')">📋 複製</button>
+      </div>
+    `;
+
+    if (item.pixaiPrompt) {
+      bodyHtml += `
+        <div class="pixai-section">
+          <span class="pixai-badge">PixAI 版本</span>
+          <div class="modal-prompt">${item.pixaiPrompt}</div>
+          <div class="modal-actions">
+            <button class="copy-modal-btn" onclick="copyFromModal('${sectionName}', ${itemIndex}, 'pixaiPrompt')">📋 複製 PixAI 版本</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // 如果已登入，顯示刪除按鈕
+    if (currentUser) {
+      bodyHtml += `
+        <div class="modal-actions" style="margin-top: 15px;">
+          <button class="delete-btn" onclick="deleteItemFromModal('${sectionName}', ${itemIndex})">🗑️ 刪除此角色</button>
+        </div>
+      `;
+    }
+
+    document.getElementById('modalBody').innerHTML = bodyHtml;
+    modal.classList.add('show');
+  };
+
+  // 關閉 Modal
+  window.closeModal = function() {
+    document.getElementById('itemModal').classList.remove('show');
+  };
+
+  // 點擊背景關閉 Modal
+  window.closeModalOnBackdrop = function(event) {
+    if (event.target === document.getElementById('itemModal')) {
+      closeModal();
+    }
+  };
+
+  // 從 Modal 複製
+  window.copyFromModal = async function(sectionName, itemIndex, promptType) {
+    const item = allData[sectionName].items[itemIndex];
+    const text = item[promptType];
+
+    try {
+      await navigator.clipboard.writeText(text);
+      event.target.textContent = '✓ 已複製';
+      event.target.classList.add('copied');
+      setTimeout(() => {
+        event.target.textContent = '📋 複製' + (promptType === 'pixaiPrompt' ? ' PixAI 版本' : '');
+        event.target.classList.remove('copied');
+      }, 2000);
+    } catch (err) {
+      console.error('Copy failed:', err);
+      alert('複製失敗');
+    }
+  };
+
+  // 滾動到分類
+  window.scrollToSection = function(sectionName) {
+    const element = document.getElementById(`section-${sectionName}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // 儲存項目
+  window.saveItem = async function(sectionName, itemIndex) {
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
+    const textarea = document.getElementById(`textarea-${sectionName}-${itemIndex}`);
+    const pixaiTextarea = document.getElementById(`pixai-${sectionName}-${itemIndex}`);
+
+    allData[sectionName].items[itemIndex].prompt = textarea.value;
+    if (pixaiTextarea) {
+      allData[sectionName].items[itemIndex].pixaiPrompt = pixaiTextarea.value;
+    }
+
+    if (await saveData()) {
+      alert('儲存成功！');
+    }
+  };
+
+  // 刪除項目（從編輯模式）
+  window.deleteItem = async function(sectionName, itemIndex) {
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
+    const input = prompt('確認刪除請輸入「刪除」');
+    if (input !== '刪除') {
+      if (input !== null) alert('取消刪除');
+      return;
+    }
+
+    allData[sectionName].items.splice(itemIndex, 1);
+
+    if (await saveData()) {
+      alert('已刪除項目');
+      renderUI();
+    }
+  };
+
+  // 從 Modal 刪除項目
+  window.deleteItemFromModal = async function(sectionName, itemIndex) {
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
+    const input = prompt('確認刪除請輸入「刪除」');
+    if (input !== '刪除') {
+      if (input !== null) alert('取消刪除');
+      return;
+    }
+
+    allData[sectionName].items.splice(itemIndex, 1);
+
+    if (await saveData()) {
+      alert('已刪除項目');
+      closeModal();
+      renderUI();
+    }
+  };
+
+  // 新增項目
+  window.addNewItem = async function(sectionName) {
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
+    const name = prompt('請輸入項目名稱：');
+    if (!name) return;
+
+    const newItem = {
+      name: name,
+      prompt: ''
+    };
+
+    allData[sectionName].items.push(newItem);
+
+    if (await saveData()) {
+      renderUI();
+    }
+  };
+
+  // 刪除分類
+  window.deleteSection = async function(sectionName) {
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
+    const input = prompt(`確定要刪除「${sectionName}」分類嗎？這將刪除該分類下的所有項目。\n\n請輸入「刪除」確認：`);
+    if (input !== '刪除') {
+      if (input !== null) alert('取消刪除');
+      return;
+    }
+
+    delete allData[sectionName];
+
+    if (await saveData()) {
+      alert('已刪除分類');
+      renderUI();
+    }
+  };
+
+  // 開啟新增分類 Modal
+  window.openAddCategoryModal = function() {
+    selectedEmoji = '📁';
+    document.getElementById('newCategoryName').value = '';
+    document.getElementById('emojiInput').value = '';
+    document.getElementById('emojiPreview').textContent = selectedEmoji;
+    document.getElementById('addCategoryModal').classList.add('show');
+
+    // 清除選中狀態
+    document.querySelectorAll('.emoji-option').forEach(opt => {
+      opt.classList.remove('selected');
+    });
+  };
+
+  // 關閉新增分類 Modal
+  window.closeAddCategoryModal = function() {
+    document.getElementById('addCategoryModal').classList.remove('show');
+    document.getElementById('emojiPicker').classList.remove('show');
+  };
+
+  // 點擊背景關閉
+  window.closeAddCategoryModalOnBackdrop = function(event) {
+    if (event.target === document.getElementById('addCategoryModal')) {
+      closeAddCategoryModal();
+    }
+  };
+
+  // 確認新增分類
+  window.confirmAddCategory = async function() {
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
+    const name = document.getElementById('newCategoryName').value.trim();
+
+    if (!name) {
+      alert('請輸入分類名稱');
+      return;
+    }
+
+    if (allData[name]) {
+      alert('該分類名稱已存在');
+      return;
+    }
+
+    const maxCreatedAt = Math.max(...Object.values(allData).map(s => s.createdAt || 0), 0);
+
+    allData[name] = {
+      icon: selectedEmoji,
+      createdAt: maxCreatedAt + 1,
+      items: []
+    };
+
+    if (await saveData()) {
+      closeAddCategoryModal();
+      renderUI();
+    }
+  };
+
+  // 初始化 Emoji Picker
+  function initializeEmojiPicker() {
+    const picker = document.getElementById('emojiPicker');
+    let html = '';
+    commonEmojis.forEach(emoji => {
+      html += `<div class="emoji-option" onclick="selectEmoji('${emoji}')">${emoji}</div>`;
+    });
+    picker.innerHTML = html;
+  }
+
+  // 切換 Emoji Picker
+  window.toggleEmojiPicker = function() {
+    document.getElementById('emojiPicker').classList.toggle('show');
+  };
+
+  // 選擇 Emoji
+  window.selectEmoji = function(emoji) {
+    selectedEmoji = emoji;
+    document.getElementById('emojiInput').value = emoji;
+    document.getElementById('emojiPreview').textContent = emoji;
+
+    // 更新選中狀態
+    document.querySelectorAll('.emoji-option').forEach(opt => {
+      opt.classList.remove('selected');
+      if (opt.textContent === emoji) {
+        opt.classList.add('selected');
+      }
+    });
+  };
+
+  // 從輸入更新 Emoji
+  window.updateEmojiFromInput = function() {
+    const input = document.getElementById('emojiInput').value;
+    if (input) {
+      selectedEmoji = input;
+      document.getElementById('emojiPreview').textContent = input;
+    }
+  };
+
+  // 開啟建議 Modal
+  window.openSuggestionModal = function() {
+    document.getElementById('suggestionText').value = '';
+    document.getElementById('suggestionModal').classList.add('show');
+    closeUserMenu();
+  };
+
+  // 關閉建議 Modal
+  window.closeSuggestionModal = function() {
+    document.getElementById('suggestionModal').classList.remove('show');
+  };
+
+  // 點擊背景關閉
+  window.closeSuggestionModalOnBackdrop = function(event) {
+    if (event.target === document.getElementById('suggestionModal')) {
+      closeSuggestionModal();
+    }
+  };
+
+  // 提交建議
+  window.submitSuggestion = async function() {
+    const text = document.getElementById('suggestionText').value.trim();
+
+    if (!text) {
+      alert('請輸入建議內容');
+      return;
+    }
+
+    if (!currentUser) {
+      alert('請先登入');
+      return;
+    }
+
+    try {
+      const suggestionRef = doc(db, 'suggestions', new Date().getTime().toString());
+      await setDoc(suggestionRef, {
+        text: text,
+        user: currentUser.email,
+        userName: currentUser.displayName,
+        timestamp: new Date().toISOString()
+      });
+
+      alert('感謝您的建議！');
+      closeSuggestionModal();
+    } catch (error) {
+      console.error('Error submitting suggestion:', error);
+      alert('提交失敗：' + error.message);
+    }
+  };
+
+  // 返回頂部
+  window.scrollToTop = function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // 滾動監聽
+  window.addEventListener('scroll', () => {
+    const backToTop = document.getElementById('backToTop');
+    if (window.scrollY > 300) {
+      backToTop.classList.add('show');
+    } else {
+      backToTop.classList.remove('show');
+    }
+  });
+
+</script>
+
+</body>
+</html>
