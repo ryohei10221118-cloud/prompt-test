@@ -1,482 +1,451 @@
-<!-- v2.2 Stable with login modal, dropdown menu, fade-in animation -->
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>角色提示管理工具 v2.2</title>
+  <title>角色提示管理工具 v2.2.2</title>
   <style>
     body {
       font-family: 'Noto Sans TC', sans-serif;
-      background-color: #f7f7f7;
+      background: #f4f6fb;
       margin: 0;
       padding: 0;
-      color: #333;
+      color: #2d2d55;
     }
+
     header {
-      background-color: #222;
-      color: white;
-      padding: 12px 20px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 20px;
-    }
-    #user-menu {
-      position: relative;
-      display: inline-block;
-    }
-    #user-btn {
-      background: #4caf50;
-      border: none;
+      align-items: center;
+      background: #4a4e91;
       color: white;
-      padding: 6px 12px;
-      cursor: pointer;
-      border-radius: 6px;
+      padding: 12px 18px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
+
+    header h1 {
+      font-size: 1.4rem;
+      margin: 0;
+    }
+
+    #userMenu {
+      position: relative;
+    }
+
+    #userBtn {
+      background: #5a67d8;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    #userBtn:hover { background: #6b74e0; }
+
     #dropdown {
-      display: none;
       position: absolute;
+      top: 40px;
       right: 0;
       background: white;
       border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-      margin-top: 5px;
-      z-index: 999;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 1000;
     }
+
     #dropdown button {
-      display: block;
-      width: 100%;
       background: none;
       border: none;
-      text-align: left;
       padding: 10px 14px;
+      text-align: left;
+      width: 100%;
       cursor: pointer;
       color: #333;
+      transition: all 0.2s;
     }
-    #dropdown button:hover {
-      background-color: #eee;
+    #dropdown button:hover { background: #edf2f7; }
+
+    #offlineNotice {
+      background: #ffe3e3;
+      color: #b00020;
+      text-align: center;
+      padding: 8px;
+      display: none;
+      font-size: 0.9rem;
     }
+
     main {
-      padding: 20px;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 16px;
     }
+
     .section {
-      margin-bottom: 24px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 16px 20px;
+      margin-bottom: 20px;
     }
+
     .section h2 {
       display: flex;
       align-items: center;
-      font-size: 18px;
+      justify-content: space-between;
+      border-bottom: 2px solid #c3bff7;
+      padding-bottom: 6px;
+      font-size: 1.1rem;
+      color: #2d2d55;
+      margin-bottom: 12px;
     }
-    .item-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 12px;
-      margin-top: 10px;
+
+    .section-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
     }
-    .item-card {
-      background: #fafafa;
-      border: 1px solid #ddd;
+
+    .add-btn {
+      background: linear-gradient(90deg, #5a67d8, #805ad5);
+      color: #fff;
+      border: none;
       border-radius: 8px;
-      padding: 10px;
+      padding: 6px 12px;
+      font-size: 0.9rem;
       cursor: pointer;
-      transition: 0.3s;
+      transition: all 0.2s ease;
+    }
+    .add-btn:hover {
+      box-shadow: 0 3px 8px rgba(90, 103, 216, 0.4);
+    }
+
+    .del-btn {
+      background: linear-gradient(90deg, #e53e3e, #c53030);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .del-btn:hover {
+      box-shadow: 0 3px 8px rgba(229, 62, 62, 0.4);
+    }
+
+    .item-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .item-card {
+      background: #f8f8ff;
+      border: 1px solid #d7d7f7;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
     }
     .item-card:hover {
-      background: #e3f2fd;
+      background: #ebecff;
+      transform: translateY(-2px);
     }
-    #topBtn {
-      display: none;
-      position: fixed;
-      bottom: 30px;
-      right: 20px;
-      background-color: #333;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-    #offlineNotice {
-      display: none;
-      background-color: #ffeb3b;
-      color: #222;
-      text-align: center;
-      padding: 8px;
-    }
+
     /* 登入 Modal */
-    #loginModal {
+    .login-modal {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.4);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      z-index: 1500;
     }
-    #loginModal.show {
-      display: flex;
-      opacity: 1;
-    }
+    .login-modal.show { display: flex; }
+
     .login-box {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+      padding: 30px 35px;
       width: 90%;
-      max-width: 400px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      transform: translateY(-20px);
-      transition: transform 0.3s ease;
-    }
-    #loginModal.show .login-box {
-      transform: translateY(0);
-    }
-    .login-box h2 {
-      margin-top: 0;
+      max-width: 380px;
+      position: relative;
       text-align: center;
+      animation: slideUp 0.3s ease;
     }
-    .login-box input {
-      width: 100%;
-      padding: 8px;
-      margin: 8px 0;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    .login-box button {
-      width: 100%;
-      padding: 10px;
+
+    .close-btn {
+      position: absolute;
+      top: 10px; right: 12px;
+      background: none;
       border: none;
-      border-radius: 6px;
+      font-size: 20px;
       cursor: pointer;
-      margin-top: 10px;
+      color: #444;
     }
+
     .google-btn {
-      background-color: #4caf50;
+      background: linear-gradient(90deg, #34a853, #0f9d58);
       color: white;
-    }
-    .email-btn {
-      background-color: #2196f3;
-      color: white;
-    }
-    .close-login {
-      float: right;
+      border: none;
+      border-radius: 10px;
+      width: 100%;
+      padding: 12px 0;
+      font-size: 1rem;
+      margin-top: 10px;
       cursor: pointer;
-      font-weight: bold;
-      color: #555;
+      transition: all 0.2s;
+    }
+    .google-btn:hover { box-shadow: 0 4px 10px rgba(52,168,83,0.4); }
+
+    .input-group { margin-top: 15px; }
+    .input-group input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    .input-group input:focus {
+      border-color: #5a67d8;
+      box-shadow: 0 0 5px rgba(90,103,216,0.3);
+      outline: none;
+    }
+
+    .email-btn {
+      background: linear-gradient(90deg, #0078d7, #005ea6);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      width: 100%;
+      padding: 12px 0;
+      font-size: 1rem;
+      margin-top: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .email-btn:hover { box-shadow: 0 4px 10px rgba(0,120,215,0.4); }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
   </style>
 </head>
+
 <body>
   <header>
-    <h1>角色提示管理工具 v2.2</h1>
-    <div id="user-menu">
-      <button id="user-btn">登入</button>
+    <h1>角色提示管理工具 v2.2.2</h1>
+    <div id="userMenu">
+      <button id="userBtn">登入</button>
       <div id="dropdown">
         <button id="suggestBtn">💬 小建議</button>
-        <button id="logoutBtn">🚪 登出</button>
+        <button id="logoutBtn">登出</button>
       </div>
     </div>
   </header>
+
   <div id="offlineNotice">⚠️ 離線模式啟用，載入本地資料</div>
-  <main id="main-content"><p>載入中...</p></main>
-  <button id="topBtn">↑</button>
+  <main id="mainContent">載入中...</main>
 
   <!-- 登入 Modal -->
-  <div id="loginModal">
+  <div id="loginModal" class="login-modal">
     <div class="login-box">
-      <span class="close-login" id="closeLogin">✖</span>
+      <button class="close-btn" id="closeLogin">✖</button>
       <h2>登入角色管理工具</h2>
-      <button class="google-btn" id="googleLoginBtn">使用 Google 登入</button>
-      <hr>
-      <input type="email" id="emailInput" placeholder="電子郵件">
-      <input type="password" id="passwordInput" placeholder="密碼">
-      <button class="email-btn" id="emailLoginBtn">信箱登入 / 註冊</button>
+      <button id="googleLoginBtn" class="google-btn">使用 Google 登入</button>
+      <div class="input-group">
+        <input type="email" id="emailInput" placeholder="電子郵件">
+        <input type="password" id="passwordInput" placeholder="密碼">
+      </div>
+      <button id="emailLoginBtn" class="email-btn">信箱登入 / 註冊</button>
     </div>
   </div>
 
-  <!-- Firebase SDK (非模組版) -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBNMQG8S1qpUwfZ5Zhq26Jo05qitp4BEes",
       authDomain: "character-prompts.firebaseapp.com",
       projectId: "character-prompts",
-      storageBucket: "character-prompts.appspot.com",
-      messagingSenderId: "123456789",
+      storageBucket: "character-prompts.firebasestorage.app",
+      messagingSenderId: "798087154717",
       appId: "1:798087154717:web:6cbbfb183cba2a05e60af4"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
     const auth = firebase.auth();
+    const db = firebase.firestore();
 
-    const userBtn = document.getElementById("user-btn");
+    const userBtn = document.getElementById("userBtn");
     const dropdown = document.getElementById("dropdown");
-    const logoutBtn = document.getElementById("logoutBtn");
     const loginModal = document.getElementById("loginModal");
-    const closeLogin = document.getElementById("closeLogin");
     const googleLoginBtn = document.getElementById("googleLoginBtn");
     const emailLoginBtn = document.getElementById("emailLoginBtn");
     const emailInput = document.getElementById("emailInput");
     const passwordInput = document.getElementById("passwordInput");
+    const logoutBtn = document.getElementById("logoutBtn");
     const suggestBtn = document.getElementById("suggestBtn");
+    const mainContent = document.getElementById("mainContent");
     const offlineNotice = document.getElementById("offlineNotice");
-    const mainContent = document.getElementById("main-content");
+    const closeLogin = document.getElementById("closeLogin");
 
     let currentUser = null;
     let allData = {};
-    let isEditing = false;
 
-       // 登入與註冊邏輯
-    googleLoginBtn.addEventListener("click", async () => {
+    // 登入
+    googleLoginBtn.onclick = async () => {
       const provider = new firebase.auth.GoogleAuthProvider();
-      try {
-        await auth.signInWithPopup(provider);
-        loginModal.classList.remove("show");
-      } catch (err) {
-        alert("登入失敗：" + err.message);
-      }
-    });
+      await auth.signInWithPopup(provider);
+      loginModal.classList.remove("show");
+    };
 
-    emailLoginBtn.addEventListener("click", async () => {
+    emailLoginBtn.onclick = async () => {
       const email = emailInput.value.trim();
       const pass = passwordInput.value.trim();
       if (!email || !pass) return alert("請輸入信箱與密碼");
       try {
         await auth.signInWithEmailAndPassword(email, pass);
-        loginModal.classList.remove("show");
       } catch (err) {
         if (err.code === "auth/user-not-found") {
           await auth.createUserWithEmailAndPassword(email, pass);
-          alert("✅ 已建立帳號並登入");
-          loginModal.classList.remove("show");
+          alert("✅ 帳號已建立並登入");
         } else {
           alert("登入失敗：" + err.message);
         }
       }
-    });
+      loginModal.classList.remove("show");
+    };
+
+    userBtn.onclick = () => {
+      if (!currentUser) loginModal.classList.add("show");
+      else dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    };
 
     closeLogin.onclick = () => loginModal.classList.remove("show");
-
-    userBtn.addEventListener("click", () => {
-      if (!currentUser) {
-        loginModal.classList.add("show");
-      } else {
-        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
-      }
-    });
-
     document.addEventListener("click", (e) => {
-      if (!userBtn.contains(e.target) && !dropdown.contains(e.target)) {
-        dropdown.style.display = "none";
-      }
+      if (!userBtn.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = "none";
     });
 
-    logoutBtn.addEventListener("click", async () => {
+    logoutBtn.onclick = async () => {
       await auth.signOut();
       currentUser = null;
-      userBtn.textContent = "登入";
-      dropdown.style.display = "none";
       renderAll();
-    });
+    };
 
     auth.onAuthStateChanged((user) => {
       currentUser = user;
-      if (user) {
-        userBtn.textContent = user.displayName || user.email;
-        renderAll();
-      } else {
-        userBtn.textContent = "登入";
-        renderAll();
-      }
+      userBtn.textContent = user ? (user.displayName || user.email) : "登入";
+      setTimeout(renderAll, 200);
     });
 
-    // 資料載入與快取
+    // 載入資料
     async function loadData() {
       try {
         const doc = await db.collection("prompts").doc("data").get();
         if (doc.exists) {
           allData = doc.data().sections || {};
           localStorage.setItem("promptData", JSON.stringify(allData));
-        } else {
-          allData = {};
-        }
+        } else allData = {};
       } catch (err) {
-        console.warn("Firebase 無法連線，使用快取", err);
         offlineNotice.style.display = "block";
         const cache = localStorage.getItem("promptData");
         allData = cache ? JSON.parse(cache) : {};
       }
     }
 
-    async function saveData() {
-      if (!currentUser) return alert("請先登入");
-      try {
-        await db.collection("prompts").doc("data").set({ sections: allData });
-        localStorage.setItem("promptData", JSON.stringify(allData));
-        alert("✅ 已儲存至雲端");
-      } catch (err) {
-        alert("⚠️ 雲端儲存失敗，已暫存至本地");
-        localStorage.setItem("promptData", JSON.stringify(allData));
-      }
-    }
-
     function sortSections() {
-      return Object.entries(allData).sort((a, b) => {
-        if (a[0] === "角色描述") return -1;
-        if (b[0] === "角色描述") return 1;
-        const ta = a[1].createdAt || 0;
-        const tb = b[1].createdAt || 0;
-        return ta - tb;
+      return Object.entries(allData).sort((a,b)=>{
+        if(a[0]==="角色描述") return -1;
+        if(b[0]==="角色描述") return 1;
+        return (a[1].createdAt||0)-(b[1].createdAt||0);
       });
     }
 
     function renderAll() {
       mainContent.innerHTML = "";
       const sorted = sortSections();
-      if (!sorted.length) {
-        mainContent.innerHTML = "<p>目前沒有角色資料</p>";
-        return;
-      }
+      if (!sorted.length) { mainContent.innerHTML = "<p>目前沒有角色資料</p>"; return; }
+
       sorted.forEach(([name, section]) => {
         const sec = document.createElement("div");
         sec.className = "section";
-        sec.innerHTML = `<h2>${section.icon || "📁"} ${name}</h2>`;
 
-        const grid = document.createElement("div");
-        grid.className = "item-grid";
-        (section.items || []).forEach((item) => {
-          const card = document.createElement("div");
-          card.className = "item-card";
-          card.innerHTML = `<strong>${item.name}</strong>`;
-          card.addEventListener("click", () => showModal(item));
-          grid.appendChild(card);
-        });
+        const header = document.createElement("h2");
+        header.innerHTML = `${section.icon || "📁"} ${name}`;
+        const actions = document.createElement("div");
+        actions.className = "section-actions";
 
         if (currentUser) {
           const addBtn = document.createElement("button");
-          addBtn.textContent = "➕ 新增角色";
+          addBtn.textContent = "＋ 新增";
+          addBtn.className = "add-btn";
           addBtn.onclick = () => addItem(name);
-          sec.appendChild(addBtn);
+          actions.appendChild(addBtn);
+
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "刪除分類";
+          delBtn.className = "del-btn";
+          delBtn.onclick = () => {
+            if (confirm(`確定要刪除分類「${name}」？`)) { delete allData[name]; renderAll(); }
+          };
+          actions.appendChild(delBtn);
         }
 
+        header.appendChild(actions);
+        sec.appendChild(header);
+
+        const grid = document.createElement("div");
+        grid.className = "item-grid";
+        (section.items || []).forEach(item=>{
+          const card=document.createElement("div");
+          card.className="item-card";
+          card.textContent=item.name;
+          card.onclick=()=>showModal(item);
+          grid.appendChild(card);
+        });
         sec.appendChild(grid);
         mainContent.appendChild(sec);
       });
-      if (currentUser) {
-        const saveBtn = document.createElement("button");
-        saveBtn.textContent = "💾 儲存全部";
-        saveBtn.onclick = saveData;
-        mainContent.appendChild(saveBtn);
-      }
     }
 
-    // 顯示角色詳細
-    function showModal(item) {
-      const modal = document.createElement("div");
-      modal.className = "modal";
-      Object.assign(modal.style, {
-        position: "fixed",
-        top: 0, left: 0, right: 0, bottom: 0,
-        background: "rgba(0,0,0,0.6)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 2000
-      });
-      const box = document.createElement("div");
-      Object.assign(box.style, {
-        background: "white",
-        borderRadius: "12px",
-        padding: "20px",
-        width: "90%",
-        maxWidth: "500px",
-        maxHeight: "80vh",
-        overflowY: "auto"
-      });
-      box.innerHTML = `<h2>${item.name}</h2><pre>${item.prompt}</pre>`;
-      const copyBtn = document.createElement("button");
-      copyBtn.textContent = "📋 複製 Prompt";
-      copyBtn.onclick = () => {
-        navigator.clipboard.writeText(item.prompt || "");
-        alert("✅ 已複製");
-      };
-      box.appendChild(copyBtn);
+    function addItem(sectionName){
+      const name=prompt("角色名稱：");
+      if(!name)return;
+      const promptText=prompt("角色描述 / Prompt：")||"";
+      allData[sectionName].items.push({name,prompt:promptText});
+      renderAll();
+    }
+
+    function showModal(item){
+      const modal=document.createElement("div");
+      Object.assign(modal.style,{position:"fixed",top:0,left:0,right:0,bottom:0,
+        background:"rgba(0,0,0,0.4)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2000});
+      const box=document.createElement("div");
+      Object.assign(box.style,{background:"rgba(255,255,255,0.95)",backdropFilter:"blur(10px)",
+        borderRadius:"20px",padding:"24px",width:"90%",maxWidth:"600px",boxShadow:"0 8px 25px rgba(0,0,0,0.2)"});
+      box.innerHTML=`<h2>${item.name}</h2><div style="white-space:pre-wrap;word-break:break-word;margin:12px 0;">${item.prompt}</div>`;
+      const btn=document.createElement("button");
+      btn.textContent="📋 複製 Prompt";
+      Object.assign(btn.style,{background:"#5a67d8",color:"white",border:"none",padding:"8px 14px",borderRadius:"8px",cursor:"pointer"});
+      btn.onclick=()=>{navigator.clipboard.writeText(item.prompt);btn.textContent="✅ 已複製！";setTimeout(()=>btn.textContent="📋 複製 Prompt",1500);};
+      box.appendChild(btn);
       modal.appendChild(box);
-      modal.addEventListener("click", (e) => {
-        if (e.target === modal) modal.remove();
-      });
+      modal.onclick=e=>{if(e.target===modal)modal.remove();};
       document.body.appendChild(modal);
     }
 
-    function addItem(sectionName) {
-      const name = prompt("角色名稱：");
-      if (!name) return;
-      const promptText = prompt("角色描述 / Prompt：") || "";
-      allData[sectionName].items.push({ name, prompt: promptText });
-      renderAll();
-    }
-
-    // 小建議表單
-    suggestBtn.addEventListener("click", () => {
-      dropdown.style.display = "none";
-      const form = document.createElement("div");
-      form.className = "modal";
-      Object.assign(form.style, {
-        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-        background: "rgba(0,0,0,0.6)", display: "flex",
-        alignItems: "center", justifyContent: "center", zIndex: 3000
-      });
-      const box = document.createElement("div");
-      Object.assign(box.style, {
-        background: "white", borderRadius: "10px",
-        padding: "20px", width: "90%", maxWidth: "400px"
-      });
-      box.innerHTML = `
-        <h3>💬 提出小建議</h3>
-        <textarea id="suggestText" style="width:100%;height:100px;"></textarea>
-        <button id="sendSuggest">送出</button>
-      `;
-      const sendBtn = box.querySelector("#sendSuggest");
-      sendBtn.onclick = () => {
-        const val = box.querySelector("#suggestText").value.trim();
-        if (!val) return alert("請輸入內容");
-        alert("✅ 感謝你的建議！(本地暫存)");
-        form.remove();
-      };
-      form.appendChild(box);
-      form.addEventListener("click", (e) => {
-        if (e.target === form) form.remove();
-      });
-      document.body.appendChild(form);
-    });
-
-    // 回頂按鈕
-    const topBtn = document.getElementById("topBtn");
-    window.addEventListener("scroll", () => {
-      topBtn.style.display = window.scrollY > 200 ? "block" : "none";
-    });
-    topBtn.addEventListener("click", () => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-
-    // 初始化
-    (async function init() {
-      await loadData();
-      renderAll();
-    })();
+    (async()=>{await loadData();renderAll();})();
   </script>
 </body>
 </html>
