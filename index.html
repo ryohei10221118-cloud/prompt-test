@@ -95,6 +95,7 @@
     flex-wrap: wrap;
     gap: 15px;
     margin-bottom: 30px;
+    align-items: center;
   }
   .nav-btn {
     padding: 12px 24px;
@@ -111,6 +112,23 @@
   .nav-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  }
+  .add-category-btn-inline {
+    padding: 12px 24px;
+    background: #6f42c1 !important;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  .add-category-btn-inline:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    background: #5a32a3 !important;
   }
   .section-title {
     color: #2c3e50;
@@ -271,6 +289,53 @@
     font-size: 0.95em;
     margin-bottom: 5px;
   }
+  .emoji-picker {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    margin: 15px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .emoji-option {
+    font-size: 24px;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    text-align: center;
+    background: white;
+    border: 2px solid transparent;
+  }
+  .emoji-option:hover {
+    background: #e3f2fd;
+    transform: scale(1.2);
+  }
+  .emoji-option.selected {
+    border-color: #667eea;
+    background: #e8eaf6;
+  }
+  .category-input-group {
+    margin-bottom: 15px;
+  }
+  .category-input-label {
+    display: block;
+    text-align: left;
+    margin-bottom: 5px;
+    color: #555;
+    font-size: 0.9em;
+  }
+  .category-input-label.optional {
+    color: #999;
+  }
+  .category-input-label.optional::after {
+    content: " (選填)";
+    color: #999;
+    font-size: 0.85em;
+  }
   .items-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -430,10 +495,6 @@
   <div id="contentArea" class="hidden">
     <h1>🎭 Prompt 管理系統</h1>
 
-    <div class="add-category-container hidden" id="addCategoryContainer">
-      <button class="add-category-btn" onclick="addNewCategory()">➕ 新增分類</button>
-    </div>
-
     <div class="nav-buttons" id="navButtons"></div>
 
     <div id="sectionsContainer"></div>
@@ -441,7 +502,7 @@
     <button class="back-to-top" id="backToTop" onclick="scrollToTop()">↑</button>
   </div>
 
-  <!-- Modal -->
+  <!-- Modal for Item Display -->
   <div id="itemModal" class="modal" onclick="closeModalOnBackdrop(event)">
     <div class="modal-content">
       <div class="modal-header">
@@ -449,6 +510,30 @@
         <button class="close-btn" onclick="closeModal()">✕</button>
       </div>
       <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Modal for Add Category -->
+  <div id="addCategoryModal" class="modal" onclick="closeAddCategoryModalOnBackdrop(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">➕ 新增分類</h2>
+        <button class="close-btn" onclick="closeAddCategoryModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="category-input-group">
+          <label class="category-input-label">分類名稱</label>
+          <input type="text" id="newCategoryName" class="edit-input" placeholder="例如: 場景、道具、特效..." />
+        </div>
+        <div class="category-input-group">
+          <label class="category-input-label optional">選擇圖示</label>
+          <div class="emoji-picker" id="emojiPicker"></div>
+        </div>
+        <div class="modal-actions">
+          <button class="save-btn" onclick="confirmAddCategory()">✓ 確定</button>
+          <button class="cancel-btn" onclick="closeAddCategoryModal()">✕ 取消</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -476,6 +561,17 @@
   let currentUser = null;
   let isEditMode = false;
   let allData = {};
+  let selectedEmoji = '📁'; // 預設 emoji
+
+  // 常用 emoji 列表
+  const commonEmojis = [
+    '👤', '🎭', '🎨', '🌟', '✨', '💫', '🔮', '🎪',
+    '🏞️', '🌅', '🌆', '🌃', '🌉', '🏙️', '🌇', '🌄',
+    '📸', '🎬', '🎥', '📹', '🎞️', '📷', '📱', '💻',
+    '🎮', '🕹️', '🎲', '🎯', '🎪', '🎨', '🖌️', '✏️',
+    '📝', '📋', '📌', '📍', '🔖', '📁', '📂', '🗂️',
+    '💡', '🔦', '🕯️', '💎', '💍', '👑', '🎩', '🎓'
+  ];
 
   // 預設資料結構
   const defaultData = {
@@ -523,8 +619,16 @@
     } finally {
       document.getElementById('loadingIndicator').classList.add('hidden');
       document.getElementById('contentArea').classList.remove('hidden');
-      if (!hasError) {
+      
+      // 根據登入狀態顯示對應按鈕
+      if (currentUser) {
+        document.getElementById('loginBtn').classList.add('hidden');
+        document.getElementById('userInfo').classList.remove('hidden');
+        document.getElementById('editModeBtn').classList.remove('hidden');
+      } else {
         document.getElementById('loginBtn').classList.remove('hidden');
+        document.getElementById('userInfo').classList.add('hidden');
+        document.getElementById('editModeBtn').classList.add('hidden');
       }
     }
   }
@@ -555,12 +659,21 @@
       document.getElementById('editModeBtn').classList.remove('hidden');
       document.getElementById('userName').textContent = user.displayName;
       document.getElementById('userPhoto').src = user.photoURL;
+      
+      // 如果在編輯模式,顯示新增分類按鈕
+      if (isEditMode) {
+        document.getElementById('addCategoryContainer').classList.remove('hidden');
+      }
     } else {
       currentUser = null;
+      isEditMode = false;
       document.getElementById('loginBtn').classList.remove('hidden');
       document.getElementById('userInfo').classList.add('hidden');
       document.getElementById('editModeBtn').classList.add('hidden');
       document.getElementById('addCategoryContainer').classList.add('hidden');
+      
+      // 確保登出後回到一般模式
+      renderAll();
     }
   });
 
@@ -599,12 +712,6 @@
   function renderAll() {
     renderNavButtons();
     renderSections();
-    
-    if (isEditMode && currentUser) {
-      document.getElementById('addCategoryContainer').classList.remove('hidden');
-    } else {
-      document.getElementById('addCategoryContainer').classList.add('hidden');
-    }
   }
 
   function renderNavButtons() {
@@ -619,6 +726,15 @@
       btn.onclick = () => scrollToSection(sectionName);
       container.appendChild(btn);
     });
+
+    // 如果在編輯模式,添加新增分類按鈕
+    if (isEditMode && currentUser) {
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-category-btn-inline';
+      addBtn.textContent = '➕ 新增分類';
+      addBtn.onclick = () => openAddCategoryModal();
+      container.appendChild(addBtn);
+    }
   }
 
   function renderSections() {
@@ -759,18 +875,71 @@
     renderAll();
   };
 
-  window.addNewCategory = function() {
-    const name = prompt('請輸入新分類名稱:');
-    if (!name) return;
+  window.openAddCategoryModal = function() {
+    selectedEmoji = '📁'; // 重置為預設
+    document.getElementById('newCategoryName').value = '';
     
-    const icon = prompt('請輸入分類圖示 (emoji):') || '📁';
+    // 渲染 emoji 選擇器
+    const emojiPicker = document.getElementById('emojiPicker');
+    emojiPicker.innerHTML = '';
+    
+    commonEmojis.forEach(emoji => {
+      const emojiDiv = document.createElement('div');
+      emojiDiv.className = 'emoji-option';
+      if (emoji === selectedEmoji) {
+        emojiDiv.classList.add('selected');
+      }
+      emojiDiv.textContent = emoji;
+      emojiDiv.onclick = function() {
+        // 移除所有選中狀態
+        document.querySelectorAll('.emoji-option').forEach(el => {
+          el.classList.remove('selected');
+        });
+        // 添加選中狀態
+        this.classList.add('selected');
+        selectedEmoji = emoji;
+      };
+      emojiPicker.appendChild(emojiDiv);
+    });
+    
+    document.getElementById('addCategoryModal').classList.add('show');
+  };
+
+  window.closeAddCategoryModal = function() {
+    document.getElementById('addCategoryModal').classList.remove('show');
+  };
+
+  window.closeAddCategoryModalOnBackdrop = function(event) {
+    if (event.target.id === 'addCategoryModal') {
+      closeAddCategoryModal();
+    }
+  };
+
+  window.confirmAddCategory = async function() {
+    const name = document.getElementById('newCategoryName').value.trim();
+    
+    if (!name) {
+      alert('請輸入分類名稱!');
+      return;
+    }
+    
+    if (allData[name]) {
+      alert('此分類名稱已存在!');
+      return;
+    }
     
     allData[name] = {
-      icon: icon,
+      icon: selectedEmoji,
       items: []
     };
     
+    await saveData();
+    closeAddCategoryModal();
     renderAll();
+  };
+
+  window.addNewCategory = function() {
+    openAddCategoryModal();
   };
 
   window.deleteSection = async function(sectionName) {
