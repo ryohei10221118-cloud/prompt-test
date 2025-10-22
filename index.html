@@ -12,7 +12,7 @@
     padding: 20px; 
   }
   .container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
   }
   .admin-bar {
@@ -92,6 +92,7 @@
   .nav-buttons {
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
     gap: 15px;
     margin-bottom: 30px;
   }
@@ -117,6 +118,13 @@
     margin: 30px 0 15px 0;
     padding-bottom: 10px;
     border-bottom: 3px solid #667eea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .section-actions {
+    display: flex;
+    gap: 10px;
   }
   .box { 
     background: #fff; 
@@ -168,15 +176,8 @@
   .copied {
     background: #2196F3 !important;
   }
-  .style-section {
-    background: #e3f2fd;
-    border-left: 4px solid #2196F3;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 4px;
-  }
-  .style-section .box {
-    margin-bottom: 10px;
+  .section-container {
+    margin-bottom: 30px;
   }
   .back-to-top {
     position: fixed;
@@ -223,15 +224,18 @@
   .save-btn {
     background: #007bff !important;
   }
-  .cancel-btn {
-    background: #6c757d !important;
-  }
-  .add-character-btn {
+  .add-btn {
     background: #17a2b8 !important;
-    margin-bottom: 15px;
+    font-size: 0.9em;
+    padding: 6px 12px;
   }
   .delete-btn {
     background: #dc3545 !important;
+  }
+  .delete-section-btn {
+    background: #dc3545 !important;
+    font-size: 0.85em;
+    padding: 6px 12px;
   }
   .hidden {
     display: none;
@@ -249,6 +253,23 @@
     border-radius: 6px;
     margin: 20px 0;
     color: #856404;
+  }
+  .add-category-container {
+    text-align: center;
+    margin: 30px 0;
+  }
+  .add-category-btn {
+    background: #6f42c1 !important;
+    font-size: 1.1em;
+    padding: 12px 24px;
+  }
+  input.edit-input {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid #667eea;
+    border-radius: 4px;
+    font-size: 0.95em;
+    margin-bottom: 5px;
   }
 </style>
 </head>
@@ -275,22 +296,15 @@
   </div>
   
   <div id="contentArea" class="hidden">
-    <h1>🎭 角色 Prompt 複製工具</h1>
+    <h1>🎭 Prompt 管理系統</h1>
 
-    <div class="nav-buttons">
-      <button class="nav-btn" onclick="scrollToSection('characters')">👤 角色描述</button>
-      <button class="nav-btn" onclick="scrollToSection('styles')">🎨 光影風格</button>
+    <div class="nav-buttons" id="navButtons"></div>
+
+    <div id="sectionsContainer"></div>
+
+    <div class="add-category-container hidden" id="addCategoryContainer">
+      <button class="add-category-btn" onclick="addNewCategory()">➕ 新增分類</button>
     </div>
-
-    <h2 class="section-title" id="characters">👤 角色描述</h2>
-    
-    <button class="add-character-btn hidden" id="addCharacterBtn" onclick="addNewCharacter()">➕ 新增角色</button>
-    
-    <div id="charactersContainer"></div>
-
-    <h2 class="section-title" id="styles">🎨 光影風格詞彙</h2>
-
-    <div class="style-section" id="stylesContainer"></div>
 
     <button class="back-to-top" id="backToTop" onclick="scrollToTop()">↑</button>
   </div>
@@ -318,30 +332,36 @@
 
   let currentUser = null;
   let isEditMode = false;
-  let charactersData = [];
-  let stylesData = [];
+  let allData = {};
 
-  // 預設資料
-  const defaultCharacters = [
-    { name: "樊季衡", prompt: "male, tanned healthy skin, silvery-blue short hair, naturally falling bangs, very short back hair, blood-red eyes, seductive smile, cross chain earrings, layered metal necklaces, whale bone tattoo on left shoulder, silky open-collar shirt, lean but muscular build, prominent collarbones, defined neck lines" },
-    { name: "樊季昀(大哥)", prompt: "Handsome man, black slicked-back hair, red eyes, black-rimmed glasses, fair slightly tan skin, white shirt with open collar, black suit, restrained sorrow, gold ring on left middle finger" },
-    { name: "戚燁", prompt: "a tall young man with a lean, model-like build, silver-white short messy hair. deep brown eyes, a silver barbell tongue piercing" },
-    { name: "蘇湛", prompt: "a tall young man, a strong and lean build broad shoulders, slightly tousled golden blond hair, short hair, gray eyes, a silver barbell tongue piercing" },
-    { name: "師尊", prompt: "a flamboyant and cunning feng shui master standing front-facing, black shoulder-length tousled hair, sly golden eyes, confident smirk, tassels earrings" },
-    { name: "溫景悅", prompt: "a tall handsome man , black hair with a few natural gray strands, softly parted and slightly wavy, slender big eyes, double eyelids, thin lips, a mole below the left eye" },
-    { name: "楚汐", prompt: "ultra-short clean haircut, no bangs, short pompadour hairstyle, soft beige-brown gradient hair color, slightly wavy texture, narrow black eyes, black irises, one raised eyebrow, thin lips, one-sided smirk, asymmetric cocky grin, gold thin-rimmed glasses slipping down nose, wearing black and white street-style jacket, silver rings, delicate semi-realistic style, soft lighting", pixaiPrompt: "ultra-short clean haircut, no bangs, The Mellow Beige hair,slightly wavy texture,black irises eyes, thin lips, one raised eyebrow,one-sided smirk, asymmetric cocky grin gold thin-rimmed glasses slipping down nose, wearing black and white street-style jacket, silver rings" },
-    { name: "祈盞", prompt: "black long hair tied in elegant ancient bun with loose strands, vivid purple eyes" },
-    { name: "孜蘊", prompt: "ultra wide-angle shot, full-body view, anime-style illustration of a young man with short reddish-brown messy hair, slightly tousled strands, sharp light-blue eyes. he has a confident, arrogant expression and a clean, handsome face with a mischievous smirk. wearing a black leather jacket, he lounges half-lying on a sofa in a relaxed but defiant pose, holding a gun casually in one hand. cinematic lighting, high detail, dynamic composition, dramatic atmosphere" }
-  ];
-
-  const defaultStyles = [
-    { name: "半寫實+電影光斑｜防出真人+人物打光", prompt: "delicate semi-realistic style" },
-    { name: "半寫實電影感", prompt: "semi-realistic cinematic tone" },
-    { name: "明亮光｜防顏色灰暗", prompt: "clean and bright composition, rich color depth" },
-    { name: "冷色調｜二哥專用詞 或 陰暗冷酷風", prompt: "cool tone lighting, smoky atmosphere" },
-    { name: "底片風｜顆粒感較重", prompt: "film-like grain and soft glow" },
-    { name: "中遠景構圖", prompt: "medium shot composition" }
-  ];
+  // 預設資料結構
+  const defaultData = {
+    "角色描述": {
+      icon: "👤",
+      items: [
+        { name: "樊季衡", prompt: "male, tanned healthy skin, silvery-blue short hair, naturally falling bangs, very short back hair, blood-red eyes, seductive smile, cross chain earrings, layered metal necklaces, whale bone tattoo on left shoulder, silky open-collar shirt, lean but muscular build, prominent collarbones, defined neck lines" },
+        { name: "樊季昀(大哥)", prompt: "Handsome man, black slicked-back hair, red eyes, black-rimmed glasses, fair slightly tan skin, white shirt with open collar, black suit, restrained sorrow, gold ring on left middle finger" },
+        { name: "戚燁", prompt: "a tall young man with a lean, model-like build, silver-white short messy hair. deep brown eyes, a silver barbell tongue piercing" },
+        { name: "蘇湛", prompt: "a tall young man, a strong and lean build broad shoulders, slightly tousled golden blond hair, short hair, gray eyes, a silver barbell tongue piercing" },
+        { name: "師尊", prompt: "a flamboyant and cunning feng shui master standing front-facing, black shoulder-length tousled hair, sly golden eyes, confident smirk, tassels earrings" },
+        { name: "溫景悅", prompt: "a tall handsome man , black hair with a few natural gray strands, softly parted and slightly wavy, slender big eyes, double eyelids, thin lips, a mole below the left eye" },
+        { name: "楚汐", prompt: "ultra-short clean haircut, no bangs, short pompadour hairstyle, soft beige-brown gradient hair color, slightly wavy texture, narrow black eyes, black irises, one raised eyebrow, thin lips, one-sided smirk, asymmetric cocky grin, gold thin-rimmed glasses slipping down nose, wearing black and white street-style jacket, silver rings, delicate semi-realistic style, soft lighting", pixaiPrompt: "ultra-short clean haircut, no bangs, The Mellow Beige hair,slightly wavy texture,black irises eyes, thin lips, one raised eyebrow,one-sided smirk, asymmetric cocky grin gold thin-rimmed glasses slipping down nose, wearing black and white street-style jacket, silver rings" },
+        { name: "祈盞", prompt: "black long hair tied in elegant ancient bun with loose strands, vivid purple eyes" },
+        { name: "孜蘊", prompt: "ultra wide-angle shot, full-body view, anime-style illustration of a young man with short reddish-brown messy hair, slightly tousled strands, sharp light-blue eyes. he has a confident, arrogant expression and a clean, handsome face with a mischievous smirk. wearing a black leather jacket, he lounges half-lying on a sofa in a relaxed but defiant pose, holding a gun casually in one hand. cinematic lighting, high detail, dynamic composition, dramatic atmosphere" }
+      ]
+    },
+    "光影風格": {
+      icon: "🎨",
+      items: [
+        { name: "半寫實+電影光斑｜防出真人+人物打光", prompt: "delicate semi-realistic style" },
+        { name: "半寫實電影感", prompt: "semi-realistic cinematic tone" },
+        { name: "明亮光｜防顏色灰暗", prompt: "clean and bright composition, rich color depth" },
+        { name: "冷色調｜二哥專用詞 或 陰暗冷酷風", prompt: "cool tone lighting, smoky atmosphere" },
+        { name: "底片風｜顆粒感較重", prompt: "film-like grain and soft glow" },
+        { name: "中遠景構圖", prompt: "medium shot composition" }
+      ]
+    }
+  };
 
   // 初始載入資料
   async function init() {
@@ -350,14 +370,12 @@
       console.log('開始載入資料...');
       await loadData();
       console.log('資料載入完成');
-      renderContent();
+      renderAll();
     } catch (error) {
       console.error('初始化失敗:', error);
       hasError = true;
-      // 即使載入失敗,也顯示預設內容
-      charactersData = defaultCharacters;
-      stylesData = defaultStyles;
-      renderContent();
+      allData = defaultData;
+      renderAll();
       document.getElementById('errorMessage').classList.remove('hidden');
     } finally {
       document.getElementById('loadingIndicator').classList.add('hidden');
@@ -380,7 +398,7 @@
     try {
       isEditMode = false;
       await signOut(auth);
-      renderContent();
+      renderAll();
     } catch (error) {
       alert('登出失敗: ' + error.message);
     }
@@ -399,7 +417,7 @@
       document.getElementById('loginBtn').classList.remove('hidden');
       document.getElementById('userInfo').classList.add('hidden');
       document.getElementById('editModeBtn').classList.add('hidden');
-      document.getElementById('addCharacterBtn').classList.add('hidden');
+      document.getElementById('addCategoryContainer').classList.add('hidden');
     }
   });
 
@@ -410,19 +428,15 @@
       
       if (docSnap.exists()) {
         const data = docSnap.data();
-        charactersData = data.characters || defaultCharacters;
-        stylesData = data.styles || defaultStyles;
+        allData = data.sections || defaultData;
         console.log('資料載入成功');
       } else {
         console.log('資料庫中沒有資料,使用預設資料');
-        charactersData = defaultCharacters;
-        stylesData = defaultStyles;
+        allData = defaultData;
       }
     } catch (error) {
       console.error('載入資料失敗:', error);
-      // 發生錯誤時使用預設資料
-      charactersData = defaultCharacters;
-      stylesData = defaultStyles;
+      allData = defaultData;
     }
   }
 
@@ -430,8 +444,7 @@
     try {
       const docRef = doc(db, 'prompts', 'data');
       await setDoc(docRef, {
-        characters: charactersData,
-        styles: stylesData,
+        sections: allData,
         lastUpdated: new Date().toISOString()
       });
       alert('保存成功!');
@@ -440,87 +453,94 @@
     }
   }
 
-  function renderContent() {
-    renderCharacters();
-    renderStyles();
+  function renderAll() {
+    renderNavButtons();
+    renderSections();
+    
+    if (isEditMode && currentUser) {
+      document.getElementById('addCategoryContainer').classList.remove('hidden');
+    } else {
+      document.getElementById('addCategoryContainer').classList.add('hidden');
+    }
   }
 
-  function renderCharacters() {
-    const container = document.getElementById('charactersContainer');
+  function renderNavButtons() {
+    const container = document.getElementById('navButtons');
     container.innerHTML = '';
     
-    charactersData.forEach((char, index) => {
-      const box = document.createElement('div');
-      box.className = 'box';
-      
-      let html = `<h2>${char.name}</h2>`;
-      
-      if (isEditMode) {
-        html += `
-          <textarea class="edit-textarea" id="char-${index}">${char.prompt}</textarea>
-          ${char.pixaiPrompt ? `
-            <h3 style="margin-top: 15px; padding-top: 15px; border-top: 2px dashed #ddd;">
-              <span style="background: #FF6B9D; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">pixAI 專用</span>
-            </h3>
-            <textarea class="edit-textarea" id="char-pixai-${index}">${char.pixaiPrompt}</textarea>
-          ` : ''}
-          <div class="edit-controls">
-            <button class="save-btn" onclick="saveCharacter(${index})">💾 保存</button>
-            <button class="delete-btn" onclick="deleteCharacter(${index})">🗑️ 刪除</button>
-          </div>
-        `;
-      } else {
-        html += `
-          <pre id="char-${index}">${char.prompt}</pre>
-          <button onclick="copyText('char-${index}', this)">複製</button>
-        `;
-        
-        if (char.pixaiPrompt) {
-          html += `
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 2px dashed #ddd;">
-              <h3 style="margin: 0 0 8px 0; color: #FF6B9D; font-weight: bold; font-size: 1em;">
-                <span style="background: #FF6B9D; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">pixAI 專用</span>
-              </h3>
-              <pre id="char-pixai-${index}">${char.pixaiPrompt}</pre>
-              <button onclick="copyText('char-pixai-${index}', this)">複製</button>
-            </div>
-          `;
-        }
-      }
-      
-      box.innerHTML = html;
-      container.appendChild(box);
+    Object.keys(allData).forEach(sectionName => {
+      const section = allData[sectionName];
+      const btn = document.createElement('button');
+      btn.className = 'nav-btn';
+      btn.textContent = `${section.icon} ${sectionName}`;
+      btn.onclick = () => scrollToSection(sectionName);
+      container.appendChild(btn);
     });
   }
 
-  function renderStyles() {
-    const container = document.getElementById('stylesContainer');
+  function renderSections() {
+    const container = document.getElementById('sectionsContainer');
     container.innerHTML = '';
     
-    stylesData.forEach((style, index) => {
-      const box = document.createElement('div');
-      box.className = 'box';
+    Object.keys(allData).forEach(sectionName => {
+      const section = allData[sectionName];
+      const sectionDiv = document.createElement('div');
+      sectionDiv.className = 'section-container';
+      sectionDiv.id = sectionName;
       
-      let html = `<h3>${style.name}</h3>`;
-      
-      if (isEditMode) {
-        html += `
-          <input type="text" class="edit-textarea" style="min-height: auto;" id="style-name-${index}" value="${style.name}" placeholder="風格名稱">
-          <textarea class="edit-textarea" id="style-${index}">${style.prompt}</textarea>
-          <div class="edit-controls">
-            <button class="save-btn" onclick="saveStyle(${index})">💾 保存</button>
-            <button class="delete-btn" onclick="deleteStyle(${index})">🗑️ 刪除</button>
+      let html = `
+        <h2 class="section-title">
+          <span>${section.icon} ${sectionName}</span>
+          <div class="section-actions">
+            ${isEditMode ? `
+              <button class="add-btn" onclick="addNewItem('${sectionName}')">➕ 新增</button>
+              <button class="delete-section-btn" onclick="deleteSection('${sectionName}')">🗑️ 刪除分類</button>
+            ` : ''}
           </div>
-        `;
-      } else {
-        html += `
-          <pre id="style-${index}">${style.prompt}</pre>
-          <button onclick="copyText('style-${index}', this)">複製</button>
-        `;
-      }
+        </h2>
+      `;
       
-      box.innerHTML = html;
-      container.appendChild(box);
+      section.items.forEach((item, index) => {
+        html += `<div class="box">`;
+        html += `<h2>${item.name}</h2>`;
+        
+        if (isEditMode) {
+          html += `
+            <input type="text" class="edit-input" id="${sectionName}-name-${index}" value="${item.name}" placeholder="項目名稱">
+            <textarea class="edit-textarea" id="${sectionName}-prompt-${index}">${item.prompt}</textarea>
+            ${item.pixaiPrompt ? `
+              <h3 style="margin-top: 15px;">pixAI 專用</h3>
+              <textarea class="edit-textarea" id="${sectionName}-pixai-${index}">${item.pixaiPrompt}</textarea>
+            ` : ''}
+            <div class="edit-controls">
+              <button class="save-btn" onclick="saveItem('${sectionName}', ${index})">💾 保存</button>
+              <button class="delete-btn" onclick="deleteItem('${sectionName}', ${index})">🗑️ 刪除</button>
+            </div>
+          `;
+        } else {
+          html += `
+            <pre id="${sectionName}-${index}">${item.prompt}</pre>
+            <button onclick="copyText('${sectionName}-${index}', this)">複製</button>
+          `;
+          
+          if (item.pixaiPrompt) {
+            html += `
+              <div style="margin-top: 15px; padding-top: 15px; border-top: 2px dashed #ddd;">
+                <h3 style="margin: 0 0 8px 0; color: #FF6B9D; font-weight: bold;">
+                  <span style="background: #FF6B9D; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">pixAI 專用</span>
+                </h3>
+                <pre id="${sectionName}-pixai-${index}">${item.pixaiPrompt}</pre>
+                <button onclick="copyText('${sectionName}-pixai-${index}', this)">複製</button>
+              </div>
+            `;
+          }
+        }
+        
+        html += `</div>`;
+      });
+      
+      sectionDiv.innerHTML = html;
+      container.appendChild(sectionDiv);
     });
   }
 
@@ -532,66 +552,69 @@
     
     isEditMode = !isEditMode;
     const btn = document.getElementById('editModeBtn');
-    const addBtn = document.getElementById('addCharacterBtn');
     
     if (isEditMode) {
       btn.textContent = '退出編輯模式';
       btn.style.background = '#ffc107';
-      addBtn.classList.remove('hidden');
     } else {
       btn.textContent = '進入編輯模式';
       btn.style.background = '#28a745';
-      addBtn.classList.add('hidden');
     }
     
-    renderContent();
+    renderAll();
   };
 
-  window.saveCharacter = async function(index) {
-    const prompt = document.getElementById(`char-${index}`).value;
-    const pixaiEl = document.getElementById(`char-pixai-${index}`);
+  window.addNewCategory = function() {
+    const name = prompt('請輸入新分類名稱:');
+    if (!name) return;
     
-    charactersData[index].prompt = prompt;
+    const icon = prompt('請輸入分類圖示 (emoji):') || '📁';
+    
+    allData[name] = {
+      icon: icon,
+      items: []
+    };
+    
+    renderAll();
+  };
+
+  window.deleteSection = async function(sectionName) {
+    if (confirm(`確定要刪除「${sectionName}」整個分類嗎?`)) {
+      delete allData[sectionName];
+      await saveData();
+      renderAll();
+    }
+  };
+
+  window.addNewItem = function(sectionName) {
+    const name = prompt('請輸入項目名稱:');
+    if (!name) return;
+    
+    allData[sectionName].items.push({ name: name, prompt: '' });
+    renderAll();
+  };
+
+  window.saveItem = async function(sectionName, index) {
+    const name = document.getElementById(`${sectionName}-name-${index}`).value;
+    const prompt = document.getElementById(`${sectionName}-prompt-${index}`).value;
+    const pixaiEl = document.getElementById(`${sectionName}-pixai-${index}`);
+    
+    allData[sectionName].items[index].name = name;
+    allData[sectionName].items[index].prompt = prompt;
+    
     if (pixaiEl) {
-      charactersData[index].pixaiPrompt = pixaiEl.value;
+      allData[sectionName].items[index].pixaiPrompt = pixaiEl.value;
     }
     
     await saveData();
-    renderContent();
+    renderAll();
   };
 
-  window.deleteCharacter = async function(index) {
-    if (confirm('確定要刪除此角色嗎?')) {
-      charactersData.splice(index, 1);
+  window.deleteItem = async function(sectionName, index) {
+    if (confirm('確定要刪除此項目嗎?')) {
+      allData[sectionName].items.splice(index, 1);
       await saveData();
-      renderContent();
-    }
-  };
-
-  window.saveStyle = async function(index) {
-    const name = document.getElementById(`style-name-${index}`).value;
-    const prompt = document.getElementById(`style-${index}`).value;
-    
-    stylesData[index].name = name;
-    stylesData[index].prompt = prompt;
-    
-    await saveData();
-    renderContent();
-  };
-
-  window.deleteStyle = async function(index) {
-    if (confirm('確定要刪除此風格嗎?')) {
-      stylesData.splice(index, 1);
-      await saveData();
-      renderContent();
-    }
-  };
-
-  window.addNewCharacter = function() {
-    const name = prompt('請輸入角色名稱:');
-    if (name) {
-      charactersData.push({ name: name, prompt: '' });
-      renderContent();
+      renderAll();
     }
   };
 
@@ -609,8 +632,8 @@
     });
   };
 
-  window.scrollToSection = function(sectionId) {
-    const element = document.getElementById(sectionId);
+  window.scrollToSection = function(sectionName) {
+    const element = document.getElementById(sectionName);
     element.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
