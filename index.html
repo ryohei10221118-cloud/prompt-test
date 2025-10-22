@@ -1,4 +1,112 @@
-<!DOCTYPE html>
+/* 手機版響應式調整 */
+  @media (max-width: 768px) {
+    body {
+      padding: 10px;
+    }
+    h1 {
+      font-size: 1.3em;
+      margin-top: 60px;
+    }
+    .nav-btn, .add-category-btn-inline {
+      padding: 10px 16px;
+      font-size: 0.9em;
+    }
+    .section-title {
+      font-size: 1.2em;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .section-actions {
+      width: 100%;
+      justify-content: flex-start;
+    }
+    .items-grid {
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+    }
+    .item-card {
+      padding: 12px 8px;
+    }
+    .item-card-name {
+      font-size: 0.9em;
+    }
+    .modal-content {
+      width: 95%;
+      padding: 20px;
+      max-height: 90vh;
+    }
+    .modal-title {
+      font-size: 1.2em;
+    }
+    .modal-prompt {
+      font-size: 0.85em;
+      padding: 12px;
+      max-height: 200px;
+    }
+    .modal-actions {
+      flex-direction: column;
+    }
+    .modal-actions button {
+      width: 100%;
+    }
+    .admin-bar {
+      position: static;
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+    }
+    .user-menu {
+      right: auto;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .login-btn-small {
+      font-size: 0.85em;
+      padding: 8px 14px;
+    }
+    .emoji-picker {
+      grid-template-columns: repeat(6, 1fr);
+      max-height: 120px;
+      padding: 10px;
+    }
+    .emoji-option {
+      font-size: 20px;
+      padding: 6px;
+    }
+    .add-btn, .delete-section-btn {
+      font-size: 0.8em;
+      padding: 5px 10px;
+    }
+    .box {
+      padding: 12px;
+    }
+    h2 {
+      font-size: 1.1em;
+    }
+    .edit-textarea {
+      font-size: 0.85em;
+    }
+    .suggestion-textarea {
+      min-height: 100px;
+      font-size: 0.85em;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .nav-buttons {
+      gap: 8px;
+    }
+    .items-grid {
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+    .emoji-picker {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }<!DOCTYPE html>
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
@@ -20,9 +128,83 @@
     top: 20px;
     right: 20px;
     z-index: 1000;
+  }
+  .user-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid #667eea;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .user-avatar:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .user-menu {
+    display: none;
+    position: absolute;
+    top: 55px;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    padding: 10px;
+    min-width: 200px;
+    z-index: 1001;
+  }
+  .user-menu.show {
+    display: block;
+    animation: slideDown 0.3s;
+  }
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .user-menu-header {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
+  }
+  .user-menu-name {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 0.95em;
+  }
+  .user-menu-email {
+    font-size: 0.8em;
+    color: #999;
+    margin-top: 2px;
+  }
+  .user-menu-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.2s;
     display: flex;
-    gap: 10px;
     align-items: center;
+    gap: 10px;
+    font-size: 0.9em;
+    margin: 5px 0;
+  }
+  .user-menu-item:hover {
+    background: #f5f5f5;
+  }
+  .user-menu-item.edit {
+    color: #28a745;
+  }
+  .user-menu-item.suggest {
+    color: #17a2b8;
+  }
+  .user-menu-item.logout {
+    color: #dc3545;
   }
   .login-btn-small {
     padding: 8px 16px;
@@ -612,13 +794,27 @@
     🔐 管理員登入
   </button>
   
-  <div class="user-info-small hidden" id="userInfo">
-    <img id="userPhoto" class="user-photo-small" src="" alt="User">
-    <span class="user-name" id="userName"></span>
-    <button class="logout-btn" onclick="logout()">登出</button>
+  <div class="hidden" id="userAvatarContainer">
+    <img id="userAvatar" class="user-avatar" src="" alt="User" onclick="toggleUserMenu()">
+    <div class="user-menu" id="userMenu">
+      <div class="user-menu-header">
+        <div class="user-menu-name" id="menuUserName"></div>
+        <div class="user-menu-email" id="menuUserEmail"></div>
+      </div>
+      <div class="user-menu-item edit" onclick="toggleEditModeFromMenu()">
+        <span>✏️</span>
+        <span id="editModeText">進入編輯模式</span>
+      </div>
+      <div class="user-menu-item suggest" onclick="openSuggestionModal()">
+        <span>💡</span>
+        <span>小小建議</span>
+      </div>
+      <div class="user-menu-item logout" onclick="logout()">
+        <span>🚪</span>
+        <span>登出</span>
+      </div>
+    </div>
   </div>
-  
-  <button class="edit-mode-toggle hidden" id="editModeBtn" onclick="toggleEditMode()">進入編輯模式</button>
 </div>
 
 <div class="container">
@@ -719,6 +915,7 @@
   const defaultData = {
     "角色描述": {
       icon: "👤",
+      createdAt: 1,
       items: [
         { name: "樊季衡", prompt: "male, tanned healthy skin, silvery-blue short hair, naturally falling bangs, very short back hair, blood-red eyes, seductive smile, cross chain earrings, layered metal necklaces, whale bone tattoo on left shoulder, silky open-collar shirt, lean but muscular build, prominent collarbones, defined neck lines" },
         { name: "樊季昀(大哥)", prompt: "Handsome man, black slicked-back hair, red eyes, black-rimmed glasses, fair slightly tan skin, white shirt with open collar, black suit, restrained sorrow, gold ring on left middle finger" },
@@ -733,6 +930,7 @@
     },
     "光影風格": {
       icon: "🎨",
+      createdAt: 2,
       items: [
         { name: "半寫實+電影光斑｜防出真人+人物打光", prompt: "delicate semi-realistic style" },
         { name: "半寫實電影感", prompt: "semi-realistic cinematic tone" },
@@ -765,12 +963,10 @@
       // 根據登入狀態顯示對應按鈕
       if (currentUser) {
         document.getElementById('loginBtn').classList.add('hidden');
-        document.getElementById('userInfo').classList.remove('hidden');
-        document.getElementById('editModeBtn').classList.remove('hidden');
+        document.getElementById('userAvatarContainer').classList.remove('hidden');
       } else {
         document.getElementById('loginBtn').classList.remove('hidden');
-        document.getElementById('userInfo').classList.add('hidden');
-        document.getElementById('editModeBtn').classList.add('hidden');
+        document.getElementById('userAvatarContainer').classList.add('hidden');
       }
     }
   }
@@ -860,8 +1056,14 @@
     const container = document.getElementById('navButtons');
     container.innerHTML = '';
     
-    Object.keys(allData).forEach(sectionName => {
-      const section = allData[sectionName];
+    // 將分類按照創建時間排序 (從舊到新)
+    const sortedSections = Object.entries(allData).sort((a, b) => {
+      const timeA = a[1].createdAt || 0;
+      const timeB = b[1].createdAt || 0;
+      return timeA - timeB;
+    });
+    
+    sortedSections.forEach(([sectionName, section]) => {
       const btn = document.createElement('button');
       btn.className = 'nav-btn';
       btn.textContent = `${section.icon} ${sectionName}`;
@@ -883,8 +1085,14 @@
     const container = document.getElementById('sectionsContainer');
     container.innerHTML = '';
     
-    Object.keys(allData).forEach(sectionName => {
-      const section = allData[sectionName];
+    // 將分類按照創建時間排序 (從舊到新)
+    const sortedSections = Object.entries(allData).sort((a, b) => {
+      const timeA = a[1].createdAt || 0;
+      const timeB = b[1].createdAt || 0;
+      return timeA - timeB;
+    });
+    
+    sortedSections.forEach(([sectionName, section]) => {
       const sectionDiv = document.createElement('div');
       sectionDiv.className = 'section-container';
       sectionDiv.id = sectionName;
@@ -1004,18 +1212,38 @@
     }
     
     isEditMode = !isEditMode;
-    const btn = document.getElementById('editModeBtn');
+    const menuText = document.getElementById('editModeText');
     
     if (isEditMode) {
-      btn.textContent = '退出編輯模式';
-      btn.style.background = '#ffc107';
+      menuText.textContent = '退出編輯模式';
     } else {
-      btn.textContent = '進入編輯模式';
-      btn.style.background = '#28a745';
+      menuText.textContent = '進入編輯模式';
     }
+    
+    // 關閉選單
+    document.getElementById('userMenu').classList.remove('show');
     
     renderAll();
   };
+
+  window.toggleEditModeFromMenu = function() {
+    toggleEditMode();
+  };
+
+  window.toggleUserMenu = function() {
+    const menu = document.getElementById('userMenu');
+    menu.classList.toggle('show');
+  };
+
+  // 點擊其他地方關閉選單
+  document.addEventListener('click', function(event) {
+    const userMenu = document.getElementById('userMenu');
+    const userAvatar = document.getElementById('userAvatar');
+    
+    if (userMenu && userAvatar && !userMenu.contains(event.target) && event.target !== userAvatar) {
+      userMenu.classList.remove('show');
+    }
+  });
 
   window.openAddCategoryModal = function() {
     selectedEmoji = '📁'; // 重置為預設
@@ -1113,12 +1341,55 @@
     
     allData[name] = {
       icon: selectedEmoji,
-      items: []
+      items: [],
+      createdAt: Date.now() // 添加創建時間戳
     };
     
     await saveData();
     closeAddCategoryModal();
     renderAll();
+  };
+
+  window.openSuggestionModal = function() {
+    document.getElementById('suggestionText').value = '';
+    document.getElementById('suggestionModal').classList.add('show');
+    document.getElementById('userMenu').classList.remove('show');
+  };
+
+  window.closeSuggestionModal = function() {
+    document.getElementById('suggestionModal').classList.remove('show');
+  };
+
+  window.closeSuggestionModalOnBackdrop = function(event) {
+    if (event.target.id === 'suggestionModal') {
+      closeSuggestionModal();
+    }
+  };
+
+  window.submitSuggestion = async function() {
+    const suggestion = document.getElementById('suggestionText').value.trim();
+    
+    if (!suggestion) {
+      alert('請輸入建議內容!');
+      return;
+    }
+    
+    try {
+      // 將建議保存到 Firebase
+      const docRef = doc(db, 'suggestions', Date.now().toString());
+      await setDoc(docRef, {
+        suggestion: suggestion,
+        userName: currentUser.displayName,
+        userEmail: currentUser.email,
+        timestamp: new Date().toISOString()
+      });
+      
+      alert('感謝您的建議!我們會仔細閱讀並考慮 😊');
+      closeSuggestionModal();
+    } catch (error) {
+      console.error('提交建議失敗:', error);
+      alert('提交失敗,請稍後再試');
+    }
   };
 
   window.addNewCategory = function() {
@@ -1201,5 +1472,22 @@
   init();
 </script>
 
+  <!-- Modal for Suggestion -->
+  <div id="suggestionModal" class="modal" onclick="closeSuggestionModalOnBackdrop(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">💡 小小建議</h2>
+        <button class="close-btn" onclick="closeSuggestionModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">有任何想法或建議都歡迎告訴我們!</p>
+        <textarea id="suggestionText" class="suggestion-textarea" placeholder="請輸入您的建議..."></textarea>
+        <div class="modal-actions">
+          <button class="save-btn" onclick="submitSuggestion()">📤 送出</button>
+          <button class="cancel-btn" onclick="closeSuggestionModal()">✕ 取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
