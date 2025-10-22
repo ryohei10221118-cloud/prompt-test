@@ -742,8 +742,20 @@
   // 步驟 2：設定 Firestore 資料庫（重要！）
   // 2-1. 在 Firebase Console 左側選單點選「Firestore Database」
   // 2-2. 點選「建立資料庫」
-  // 2-3. 選擇「以測試模式啟動」（或自訂規則）
-  // 2-4. 確保規則允許讀寫（測試模式的規則為：allow read, write: if true;）
+  // 2-3. 選擇位置後，點選「規則」分頁
+  // 2-4. 將規則修改為以下內容（未登入只能讀取，登入後可新增/修改/刪除）：
+  //
+  //      rules_version = '2';
+  //      service cloud.firestore {
+  //        match /databases/{database}/documents {
+  //          match /{document=**} {
+  //            allow read: if true;  // 所有人都可以瀏覽
+  //            allow write: if request.auth != null;  // 只有登入用戶可以修改
+  //          }
+  //        }
+  //      }
+  //
+  // 2-5. 點選「發布」儲存規則
   //
   // 步驟 3：啟用 Authentication
   // 3-1. 在 Firebase Console 左側選單點選「Authentication」
