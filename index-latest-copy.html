@@ -183,7 +183,7 @@
     display: none;
     gap: 10px;
     margin-bottom: 30px;
-    align-items: center;
+    align-items: stretch;
   }
   .nav-select {
     flex: 1;
@@ -292,6 +292,33 @@
     font-weight: bold;
     color: #2c3e50;
     font-size: 1em;
+  }
+  .item-card-image {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    background: #f0f0f0;
+  }
+  .image-input-group {
+    margin-bottom: 15px;
+  }
+  .image-preview-container {
+    margin-top: 10px;
+  }
+  .image-preview {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 6px;
+    border: 2px solid #e0e0e0;
+  }
+  .modal-item-image {
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-bottom: 15px;
   }
   .modal {
     display: none;
@@ -608,26 +635,37 @@
   }
   .nav-select {
     font-size: 0.9em;
-    height: 44px;
+    min-height: 44px;
     padding: 10px 16px;
+    line-height: normal;
   }
   .add-category-btn-inline {
-    padding: 10px 16px;
     font-size: 0.9em;
     flex-shrink: 0;
-    height: 44px;
+    min-height: 44px;
+    padding: 10px 16px !important;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
   }
   .add-btn, .delete-section-btn {
     font-size: 0.75rem;
   }
   .section-title {
     font-size: 1.2em;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title > span {
+    flex: 1;
+    min-width: 120px;
+  }
+  .section-actions {
+    flex-wrap: wrap;
+    gap: 5px;
   }
   .items-grid {
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
@@ -802,6 +840,11 @@
         <label class="category-input-label optional">PixAI Prompt（選填）</label>
         <textarea id="newItemPixaiPrompt" class="edit-textarea" placeholder="PixAI 專用版本..."></textarea>
       </div>
+      <div class="category-input-group">
+        <label class="category-input-label optional">範例圖片 URL（選填）</label>
+        <input type="text" id="newItemImageUrl" class="edit-input" placeholder="https://example.com/image.jpg" oninput="previewImageAdd(this.value)" />
+        <div class="image-preview-container" id="newItemImagePreview"></div>
+      </div>
       <div class="modal-actions">
         <button class="save-btn" onclick="confirmAddItem()">✓ 確定</button>
         <button class="cancel-btn" onclick="closeAddItemModal()">✕ 取消</button>
@@ -828,6 +871,11 @@
       <div class="category-input-group">
         <label class="category-input-label optional">PixAI Prompt（選填）</label>
         <textarea id="editItemPixaiPrompt" class="edit-textarea" placeholder="PixAI 專用版本..."></textarea>
+      </div>
+      <div class="category-input-group">
+        <label class="category-input-label optional">範例圖片 URL（選填）</label>
+        <input type="text" id="editItemImageUrl" class="edit-input" placeholder="https://example.com/image.jpg" oninput="previewImageEdit(this.value)" />
+        <div class="image-preview-container" id="editItemImagePreview"></div>
       </div>
       <div class="modal-actions">
         <button class="save-btn" onclick="confirmEditItem()">✓ 儲存</button>
@@ -1208,8 +1256,10 @@
 
   // 渲染項目（檢視模式）
   function renderItemViewMode(sectionName, item, index) {
+    const imageHtml = item.imageUrl ? `<img src="${item.imageUrl}" class="item-card-image" alt="${item.name}" onerror="this.style.display='none'" />` : '';
     return `
       <div class="item-card" onclick="openItemModal('${sectionName}', ${index})">
+        ${imageHtml}
         <div class="item-card-name">${item.name}</div>
       </div>
     `;
@@ -1252,6 +1302,11 @@
     document.getElementById('modalHeaderActions').innerHTML = headerActionsHtml;
 
     let bodyHtml = '';
+
+    // 顯示圖片
+    if (item.imageUrl) {
+      bodyHtml += `<img src="${item.imageUrl}" class="modal-item-image" alt="${item.name}" onerror="this.style.display='none'" />`;
+    }
 
     // 判斷顯示邏輯
     const hasPrompt = item.prompt && item.prompt.trim();
@@ -1399,6 +1454,8 @@
     document.getElementById('newItemName').value = '';
     document.getElementById('newItemPrompt').value = '';
     document.getElementById('newItemPixaiPrompt').value = '';
+    document.getElementById('newItemImageUrl').value = '';
+    document.getElementById('newItemImagePreview').innerHTML = '';
     document.getElementById('addItemModal').classList.add('show');
 
     // 自動聚焦到角色名稱輸入框
@@ -1425,6 +1482,7 @@
     const name = document.getElementById('newItemName').value.trim();
     const prompt = document.getElementById('newItemPrompt').value.trim();
     const pixaiPrompt = document.getElementById('newItemPixaiPrompt').value.trim();
+    const imageUrl = document.getElementById('newItemImageUrl').value.trim();
 
     if (!name) {
       alert('請輸入角色名稱');
@@ -1443,6 +1501,10 @@
 
     if (pixaiPrompt) {
       newItem.pixaiPrompt = pixaiPrompt;
+    }
+
+    if (imageUrl) {
+      newItem.imageUrl = imageUrl;
     }
 
     allData[currentSectionForNewItem].items.push(newItem);
@@ -1471,6 +1533,14 @@
     document.getElementById('editItemName').value = item.name || '';
     document.getElementById('editItemPrompt').value = item.prompt || '';
     document.getElementById('editItemPixaiPrompt').value = item.pixaiPrompt || '';
+    document.getElementById('editItemImageUrl').value = item.imageUrl || '';
+
+    // 顯示圖片預覽
+    if (item.imageUrl) {
+      document.getElementById('editItemImagePreview').innerHTML = `<img src="${item.imageUrl}" class="image-preview" alt="預覽" onerror="this.style.display='none'" />`;
+    } else {
+      document.getElementById('editItemImagePreview').innerHTML = '';
+    }
 
     // 先關閉詳情 Modal，再開啟編輯 Modal
     closeModal();
@@ -1501,6 +1571,7 @@
     const name = document.getElementById('editItemName').value.trim();
     const prompt = document.getElementById('editItemPrompt').value.trim();
     const pixaiPrompt = document.getElementById('editItemPixaiPrompt').value.trim();
+    const imageUrl = document.getElementById('editItemImageUrl').value.trim();
 
     if (!name) {
       alert('請輸入角色名稱');
@@ -1519,6 +1590,10 @@
 
     if (pixaiPrompt) {
       updatedItem.pixaiPrompt = pixaiPrompt;
+    }
+
+    if (imageUrl) {
+      updatedItem.imageUrl = imageUrl;
     }
 
     allData[currentSectionForEditItem].items[currentIndexForEditItem] = updatedItem;
@@ -1652,6 +1727,26 @@
     if (input) {
       selectedEmoji = input;
       document.getElementById('emojiPreview').textContent = input;
+    }
+  };
+
+  // 圖片預覽（新增）
+  window.previewImageAdd = function(url) {
+    const preview = document.getElementById('newItemImagePreview');
+    if (url && url.trim()) {
+      preview.innerHTML = `<img src="${url}" class="image-preview" alt="預覽" onerror="this.parentElement.innerHTML='<small style=color:#dc3545>無法載入圖片</small>'" />`;
+    } else {
+      preview.innerHTML = '';
+    }
+  };
+
+  // 圖片預覽（編輯）
+  window.previewImageEdit = function(url) {
+    const preview = document.getElementById('editItemImagePreview');
+    if (url && url.trim()) {
+      preview.innerHTML = `<img src="${url}" class="image-preview" alt="預覽" onerror="this.parentElement.innerHTML='<small style=color:#dc3545>無法載入圖片</small>'" />`;
+    } else {
+      preview.innerHTML = '';
     }
   };
 
