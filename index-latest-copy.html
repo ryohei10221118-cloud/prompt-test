@@ -205,6 +205,8 @@
     background-position: center, right 12px center;
     background-size: cover, 20px;
     padding-right: 40px;
+    height: 48px;
+    line-height: 1.2;
   }
   .nav-select option {
     background: white;
@@ -423,17 +425,12 @@
     border-radius: 50%;
     cursor: pointer;
     font-size: 24px;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    transition: transform 0.3s, opacity 0.3s;
+    transition: transform 0.3s;
     z-index: 999;
-    opacity: 0;
-  }
-  .back-to-top.show {
-    display: flex;
-    opacity: 1;
   }
   .back-to-top:hover {
     transform: translateY(-5px);
@@ -611,11 +608,17 @@
   }
   .nav-select {
     font-size: 0.9em;
+    height: 44px;
+    padding: 10px 16px;
   }
   .add-category-btn-inline {
     padding: 10px 16px;
     font-size: 0.9em;
     flex-shrink: 0;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .add-btn, .delete-section-btn {
     font-size: 0.75rem;
@@ -1711,17 +1714,6 @@
   window.scrollToTop = function() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  // 滾動監聽
-  window.addEventListener('scroll', () => {
-    const backToTop = document.getElementById('backToTop');
-    // 當滾動超過一整頁的高度時顯示回到最上按鈕
-    if (window.scrollY > window.innerHeight) {
-      backToTop.classList.add('show');
-    } else {
-      backToTop.classList.remove('show');
-    }
-  });
 
 </script>
 
