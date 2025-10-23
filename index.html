@@ -155,6 +155,7 @@
     font-weight: bold;
     transition: transform 0.2s, box-shadow 0.2s;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    white-space: nowrap;
   }
   .nav-btn:hover {
     transform: translateY(-2px);
@@ -171,6 +172,7 @@
     font-weight: bold;
     transition: transform 0.2s, box-shadow 0.2s;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    white-space: nowrap;
   }
   .add-category-btn-inline:hover {
     transform: translateY(-2px);
@@ -425,7 +427,7 @@
   }
   .add-btn {
     background: #17a2b8 !important;
-    font-size: 0.9em;
+    font-size: 0.85rem;
     padding: 6px 12px;
   }
   .delete-btn {
@@ -433,7 +435,7 @@
   }
   .delete-section-btn {
     background: #dc3545 !important;
-    font-size: 0.9em;
+    font-size: 0.85rem;
     padding: 6px 12px;
   }
   .cancel-btn {
@@ -576,7 +578,7 @@
     font-size: 0.9em;
   }
   .add-btn, .delete-section-btn {
-    font-size: 0.85em;
+    font-size: 0.75rem;
   }
   .section-title {
     font-size: 1.2em;
@@ -1073,14 +1075,17 @@
     });
 
     let html = '';
+
+    // 新增分類按鈕在最左邊
+    if (currentUser) {
+      html += `<button class="add-category-btn-inline" onclick="openAddCategoryModal()">➕ 新增分類</button>`;
+    }
+
+    // 接著按創建順序顯示分類按鈕
     sortedSections.forEach(([name, section]) => {
       const icon = section.icon || '📁';
       html += `<button class="nav-btn" onclick="scrollToSection('${name}')">${icon} ${name}</button>`;
     });
-
-    if (currentUser) {
-      html += `<button class="add-category-btn-inline" onclick="openAddCategoryModal()">➕ 新增分類</button>`;
-    }
 
     container.innerHTML = html;
   }
@@ -1637,7 +1642,8 @@
   // 滾動監聽
   window.addEventListener('scroll', () => {
     const backToTop = document.getElementById('backToTop');
-    if (window.scrollY > 300) {
+    // 當滾動超過一整頁的高度時顯示回到最上按鈕
+    if (window.scrollY > window.innerHeight) {
       backToTop.classList.add('show');
     } else {
       backToTop.classList.remove('show');
