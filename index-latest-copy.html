@@ -285,6 +285,10 @@
     cursor: pointer;
     transition: all 0.3s;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
   .item-card:hover {
     border-color: #667eea;
@@ -639,8 +643,8 @@
   .nav-select {
     font-size: 0.75rem;
     padding: 6px 12px;
-    padding-right: 32px;
-    line-height: normal;
+    padding-right: 28px;
+    line-height: 1.2;
     height: auto;
   }
   .add-category-btn-inline {
@@ -652,6 +656,7 @@
     justify-content: center;
     box-sizing: border-box;
     height: auto;
+    line-height: 1.2;
   }
   .add-btn, .delete-section-btn {
     font-size: 0.75rem;
@@ -1080,6 +1085,7 @@
       await signInWithEmailAndPassword(auth, email, password);
       alert('登入成功！');
       closeLoginModal();
+      renderUI(); // 重新渲染界面以顯示編輯按鈕
     } catch (error) {
       if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
         // 如果用戶不存在，嘗試註冊
@@ -1087,6 +1093,7 @@
           await createUserWithEmailAndPassword(auth, email, password);
           alert('註冊成功並已登入！');
           closeLoginModal();
+          renderUI(); // 重新渲染界面以顯示編輯按鈕
         } catch (registerError) {
           console.error('Register error:', registerError);
           alert('註冊失敗：' + registerError.message);
@@ -1106,6 +1113,7 @@
       await signOut(auth);
       closeUserMenu();
       alert('已登出');
+      renderUI(); // 重新渲染界面以隱藏編輯按鈕
     } catch (error) {
       console.error('Logout error:', error);
       alert('登出失敗，請重試');
