@@ -44,21 +44,24 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
   .login-btn-small {
-    padding: 8px 16px;
-    background: #4285f4;
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 50%;
     cursor: pointer;
-    font-size: 14px;
-    display: inline-flex;
+    font-size: 20px;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    transition: background 0.3s;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    justify-content: center;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border: 3px solid #667eea;
   }
   .login-btn-small:hover {
-    background: #357ae8;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
   .user-menu {
     display: none;
@@ -694,7 +697,7 @@
 
 <div class="admin-bar">
   <button class="login-btn-small hidden" id="loginBtn">
-    🔐 登入
+    🔐
   </button>
 
   <div class="hidden" id="userAvatarContainer">
@@ -842,9 +845,14 @@
         <textarea id="newItemPixaiPrompt" class="edit-textarea" placeholder="PixAI 專用版本..."></textarea>
       </div>
       <div class="category-input-group">
-        <label class="category-input-label optional">範例圖片 URL（選填）</label>
-        <input type="text" id="newItemImageUrl" class="edit-input" placeholder="https://example.com/image.jpg" oninput="previewImageAdd(this.value)" />
+        <label class="category-input-label optional">範例圖片（選填）</label>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+          <input type="file" id="newItemImageFile" class="edit-input" accept="image/*" onchange="handleImageUploadAdd(this)" style="flex: 1;" />
+          <button type="button" class="cancel-btn" onclick="clearImageAdd()" style="margin: 0; padding: 8px 16px;">清除</button>
+        </div>
+        <input type="text" id="newItemImageUrl" class="edit-input" placeholder="或輸入圖片 URL：https://example.com/image.jpg" oninput="previewImageAdd(this.value)" />
         <div class="image-preview-container" id="newItemImagePreview"></div>
+        <div id="newItemUploadProgress" style="display: none; color: #17a2b8; font-size: 0.9em; margin-top: 5px;"></div>
       </div>
       <div class="modal-actions">
         <button class="save-btn" onclick="confirmAddItem()">✓ 確定</button>
@@ -874,9 +882,14 @@
         <textarea id="editItemPixaiPrompt" class="edit-textarea" placeholder="PixAI 專用版本..."></textarea>
       </div>
       <div class="category-input-group">
-        <label class="category-input-label optional">範例圖片 URL（選填）</label>
-        <input type="text" id="editItemImageUrl" class="edit-input" placeholder="https://example.com/image.jpg" oninput="previewImageEdit(this.value)" />
+        <label class="category-input-label optional">範例圖片（選填）</label>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+          <input type="file" id="editItemImageFile" class="edit-input" accept="image/*" onchange="handleImageUploadEdit(this)" style="flex: 1;" />
+          <button type="button" class="cancel-btn" onclick="clearImageEdit()" style="margin: 0; padding: 8px 16px;">清除</button>
+        </div>
+        <input type="text" id="editItemImageUrl" class="edit-input" placeholder="或輸入圖片 URL：https://example.com/image.jpg" oninput="previewImageEdit(this.value)" />
         <div class="image-preview-container" id="editItemImagePreview"></div>
+        <div id="editItemUploadProgress" style="display: none; color: #17a2b8; font-size: 0.9em; margin-top: 5px;"></div>
       </div>
       <div class="modal-actions">
         <button class="save-btn" onclick="confirmEditItem()">✓ 儲存</button>
@@ -890,6 +903,7 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
   import { getFirestore, doc, getDoc, setDoc, collection, addDoc, query, orderBy, getDocs, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
   // ⚠️ 重要：請將下方的 Firebase 設定替換為您自己的專案設定
   // 請前往 Firebase Console (https://console.firebase.google.com/)
@@ -935,6 +949,7 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const storage = getStorage(app);
 
   let currentUser = null;
   let isEditMode = false;
@@ -1456,7 +1471,9 @@
     document.getElementById('newItemPrompt').value = '';
     document.getElementById('newItemPixaiPrompt').value = '';
     document.getElementById('newItemImageUrl').value = '';
+    document.getElementById('newItemImageFile').value = '';
     document.getElementById('newItemImagePreview').innerHTML = '';
+    document.getElementById('newItemUploadProgress').style.display = 'none';
     document.getElementById('addItemModal').classList.add('show');
 
     // 自動聚焦到角色名稱輸入框
@@ -1535,6 +1552,8 @@
     document.getElementById('editItemPrompt').value = item.prompt || '';
     document.getElementById('editItemPixaiPrompt').value = item.pixaiPrompt || '';
     document.getElementById('editItemImageUrl').value = item.imageUrl || '';
+    document.getElementById('editItemImageFile').value = '';
+    document.getElementById('editItemUploadProgress').style.display = 'none';
 
     // 顯示圖片預覽
     if (item.imageUrl) {
@@ -1749,6 +1768,102 @@
     } else {
       preview.innerHTML = '';
     }
+  };
+
+  // 上傳圖片到 Firebase Storage（新增）
+  window.handleImageUploadAdd = async function(input) {
+    if (!input.files || !input.files[0]) return;
+
+    const file = input.files[0];
+    const progressDiv = document.getElementById('newItemUploadProgress');
+    const preview = document.getElementById('newItemImagePreview');
+
+    try {
+      progressDiv.style.display = 'block';
+      progressDiv.textContent = '⏳ 上傳中...';
+
+      // 創建唯一的文件名
+      const timestamp = new Date().getTime();
+      const fileName = `images/${timestamp}_${file.name}`;
+      const storageRef = ref(storage, fileName);
+
+      // 上傳文件
+      await uploadBytes(storageRef, file);
+
+      // 獲取下載 URL
+      const downloadURL = await getDownloadURL(storageRef);
+
+      // 設置 URL 輸入框的值
+      document.getElementById('newItemImageUrl').value = downloadURL;
+
+      // 顯示預覽
+      preview.innerHTML = `<img src="${downloadURL}" class="image-preview" alt="預覽" />`;
+
+      progressDiv.textContent = '✓ 上傳成功！';
+      setTimeout(() => {
+        progressDiv.style.display = 'none';
+      }, 2000);
+    } catch (error) {
+      console.error('Upload error:', error);
+      progressDiv.textContent = '✗ 上傳失敗：' + error.message;
+      progressDiv.style.color = '#dc3545';
+    }
+  };
+
+  // 上傳圖片到 Firebase Storage（編輯）
+  window.handleImageUploadEdit = async function(input) {
+    if (!input.files || !input.files[0]) return;
+
+    const file = input.files[0];
+    const progressDiv = document.getElementById('editItemUploadProgress');
+    const preview = document.getElementById('editItemImagePreview');
+
+    try {
+      progressDiv.style.display = 'block';
+      progressDiv.textContent = '⏳ 上傳中...';
+
+      // 創建唯一的文件名
+      const timestamp = new Date().getTime();
+      const fileName = `images/${timestamp}_${file.name}`;
+      const storageRef = ref(storage, fileName);
+
+      // 上傳文件
+      await uploadBytes(storageRef, file);
+
+      // 獲取下載 URL
+      const downloadURL = await getDownloadURL(storageRef);
+
+      // 設置 URL 輸入框的值
+      document.getElementById('editItemImageUrl').value = downloadURL;
+
+      // 顯示預覽
+      preview.innerHTML = `<img src="${downloadURL}" class="image-preview" alt="預覽" />`;
+
+      progressDiv.textContent = '✓ 上傳成功！';
+      setTimeout(() => {
+        progressDiv.style.display = 'none';
+      }, 2000);
+    } catch (error) {
+      console.error('Upload error:', error);
+      progressDiv.textContent = '✗ 上傳失敗：' + error.message;
+      progressDiv.style.color = '#dc3545';
+    }
+  };
+
+  // 清除圖片（新增）
+  window.clearImageAdd = function() {
+    document.getElementById('newItemImageFile').value = '';
+    document.getElementById('newItemImageUrl').value = '';
+    document.getElementById('newItemImagePreview').innerHTML = '';
+    document.getElementById('newItemUploadProgress').style.display = 'none';
+  };
+
+  // 清除圖片（編輯）
+  window.clearImageEdit = function() {
+    document.getElementById('editItemImageFile').value = '';
+    document.getElementById('editItemImageUrl').value = '';
+    document.getElementById('editItemImagePreview').innerHTML = '';
+    document.getElementById('editItemUploadProgress').style.display = 'none';
   };
 
   // 開啟建議 Modal
