@@ -154,6 +154,7 @@
     font-weight: bold;
     transition: transform 0.2s, box-shadow 0.2s;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    white-space: nowrap;
   }
   .nav-btn:hover {
     transform: translateY(-2px);
@@ -170,6 +171,7 @@
     font-weight: bold;
     transition: transform 0.2s, box-shadow 0.2s;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    white-space: nowrap;
   }
   .add-category-btn-inline:hover {
     transform: translateY(-2px);
@@ -1072,14 +1074,17 @@
     });
 
     let html = '';
+
+    // 新增分類按鈕在最左邊
+    if (currentUser) {
+      html += `<button class="add-category-btn-inline" onclick="openAddCategoryModal()">➕ 新增分類</button>`;
+    }
+
+    // 接著按創建順序顯示分類按鈕
     sortedSections.forEach(([name, section]) => {
       const icon = section.icon || '📁';
       html += `<button class="nav-btn" onclick="scrollToSection('${name}')">${icon} ${name}</button>`;
     });
-
-    if (currentUser) {
-      html += `<button class="add-category-btn-inline" onclick="openAddCategoryModal()">➕ 新增分類</button>`;
-    }
 
     container.innerHTML = html;
   }
@@ -1636,7 +1641,8 @@
   // 滾動監聽
   window.addEventListener('scroll', () => {
     const backToTop = document.getElementById('backToTop');
-    if (window.scrollY > 300) {
+    // 當滾動超過一整頁的高度時顯示回到最上按鈕
+    if (window.scrollY > window.innerHeight) {
       backToTop.classList.add('show');
     } else {
       backToTop.classList.remove('show');
