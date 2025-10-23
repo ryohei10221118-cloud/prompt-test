@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 <title>角色分類管理工具</title>
+<link rel="icon" type="image/png" href="/favicon.png">
 
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -177,6 +178,37 @@
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(0,0,0,0.15);
     background: #5a32a3 !important;
+  }
+  .mobile-nav-container {
+    display: none;
+    gap: 10px;
+    margin-bottom: 30px;
+    align-items: center;
+  }
+  .nav-select {
+    flex: 1;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%),
+                      url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat, no-repeat;
+    background-position: center, right 12px center;
+    background-size: cover, 20px;
+    padding-right: 40px;
+  }
+  .nav-select option {
+    background: white;
+    color: #2c3e50;
   }
   .section-title {
     color: #2c3e50;
@@ -572,14 +604,18 @@
     right: 10px;
   }
   .nav-buttons {
-    flex-wrap: wrap;
-    justify-content: center;
-    overflow-x: visible;
-    gap: 10px;
+    display: none;
   }
-  .nav-btn, .add-category-btn-inline {
+  .mobile-nav-container {
+    display: flex;
+  }
+  .nav-select {
+    font-size: 0.9em;
+  }
+  .add-category-btn-inline {
     padding: 10px 16px;
     font-size: 0.9em;
+    flex-shrink: 0;
   }
   .add-btn, .delete-section-btn {
     font-size: 0.75rem;
@@ -655,6 +691,12 @@
     <h1>🎭 Prompt 管理系統</h1>
 
     <div class="nav-buttons" id="navButtons"></div>
+
+    <div class="mobile-nav-container" id="mobileNavContainer">
+      <select class="nav-select" id="navSelect">
+        <option value="">選擇分類</option>
+      </select>
+    </div>
 
     <div id="sectionsContainer"></div>
   </div>
@@ -1074,25 +1116,52 @@
   // 渲染導航按鈕
   function renderNavigationButtons() {
     const container = document.getElementById('navButtons');
+    const mobileContainer = document.getElementById('mobileNavContainer');
     const sortedSections = Object.entries(allData).sort((a, b) => {
       return (a[1].createdAt || 0) - (b[1].createdAt || 0);
     });
 
+    // 桌面端按鈕
     let html = '';
-
     // 新增分類按鈕在最左邊
     if (currentUser) {
       html += `<button class="add-category-btn-inline" onclick="openAddCategoryModal()">➕ 新增分類</button>`;
     }
-
     // 接著按創建順序顯示分類按鈕
     sortedSections.forEach(([name, section]) => {
       const icon = section.icon || '📁';
       html += `<button class="nav-btn" onclick="scrollToSection('${name}')">${icon} ${name}</button>`;
     });
-
     container.innerHTML = html;
+
+    // 手機端下拉選單
+    let mobileHtml = '<select class="nav-select" id="navSelect" onchange="handleCategorySelect(this)">';
+    mobileHtml += '<option value="">📂 選擇分類</option>';
+    sortedSections.forEach(([name, section]) => {
+      const icon = section.icon || '📁';
+      mobileHtml += `<option value="${name}">${icon} ${name}</option>`;
+    });
+    mobileHtml += '</select>';
+
+    // 新增分類按鈕
+    if (currentUser) {
+      mobileHtml += `<button class="add-category-btn-inline" onclick="openAddCategoryModal()">➕ 新增分類</button>`;
+    }
+
+    mobileContainer.innerHTML = mobileHtml;
   }
+
+  // 處理手機端分類選擇
+  window.handleCategorySelect = function(select) {
+    const sectionName = select.value;
+    if (sectionName) {
+      scrollToSection(sectionName);
+      // 滾動後重置選單到預設狀態
+      setTimeout(() => {
+        select.value = '';
+      }, 500);
+    }
+  };
 
   // 渲染所有分類
   function renderSections() {
